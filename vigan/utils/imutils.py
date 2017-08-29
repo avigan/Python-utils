@@ -982,9 +982,7 @@ def fix_badpix(img, bpm, npix=8, weight=False):
 
     # create default distance array
     dd = ddmin
-    xx, yy = np.meshgrid(np.arange(2*dd+1), np.arange(2*dd+1))
-    xx -= dd
-    yy -= dd
+    xx, yy = np.meshgrid(np.arange(2*dd+1)-dd, np.arange(2*dd+1)-dd)
     dist_default = np.sqrt(xx**2 + yy**2)
 
     bpm = np.logical_not(bpm)
@@ -1017,9 +1015,7 @@ def fix_badpix(img, bpm, npix=8, weight=False):
             dist = dist_default
         else:
             # otherwise recompute one
-            xx, yy = np.meshgrid(np.arange(2*dd+1), np.arange(2*dd+1))
-            xx -= dd
-            yy -= dd
+            xx, yy = np.meshgrid(np.arange(2*dd+1)-dd, np.arange(2*dd+1)-dd)
             dist = np.sqrt(xx**2 + yy**2)
             
         # keep good pixels
@@ -1031,13 +1027,10 @@ def fix_badpix(img, bpm, npix=8, weight=False):
         good_pix  = good_pix[ii]
         good_dist = good_dist[ii]
 
-        # accounting for pixels with the same distance at the edge
-        mm = np.where(good_dist[npix-1:] == good_dist[npix-1])
-        nn = mm[0].size
-
-        # get the values of the relevant pixels
-        good_pix  = good_pix[:npix+nn-1]
-        good_dist = good_dist[:npix+nn-1]
+        # get values of relevant pixels
+        mm = np.where(good_dist <= good_dist[npix-1])
+        good_pix  = good_pix[mm]
+        good_dist = good_dist[mm]
 
         ii = np.argsort(good_pix)
         good_pix  = good_pix[ii]
@@ -1047,11 +1040,12 @@ def fix_badpix(img, bpm, npix=8, weight=False):
         # pixels of the bunch, then weighting by the inverse of the
         # distances if desired
         if weight:
-            new_val = np.sum(good_pix[1:npix+nn-2] / good_dist[1:npix+nn-2])
-            new_val = new_val / np.sum(1/good_dist[1:npix+nn-2])
+            final_dist = good_dist[1:-1]
+            new_val = np.sum(good_pix[1:-1] / final_dist)
+            new_val = new_val / np.sum(1/final_dist)
         else:
-            new_val = np.mean(good_pix[1:npix+nn-1])
-
+            new_val = np.mean(good_pix[1:-1])
+            
         img[cy, cx] = new_val
             
     return img
