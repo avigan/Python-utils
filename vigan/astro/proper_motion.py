@@ -2,8 +2,10 @@ import numpy as np
 import os.path as path
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import astropy.units as unit
 
 from astropy.time import Time
+from astropy.coordinates import Angle
 
 
 def convert_dates(dates, format='jd'):
@@ -212,10 +214,29 @@ def track(dates, target_info):
     #######################################
     # target info
     #
-    radeg    = target_info['radeg']
-    decdeg   = target_info['decdeg']
-    pm       = target_info['pm']
+    keys = target_info.keys()
+    
+    # coordinates
+    if 'radeg' in keys:
+        radeg = target_info['radeg']
+    elif 'ra' in keys:
+        ra = target_info['ra']
+        radeg = Angle(ra, unit=unit.deg).degree * 15
+    else:
+        raise ValueError('Missing right ascension (ra or radeg) entry in target info')
 
+    if 'decdeg' in keys:
+        decdeg = target_info['decdeg']
+    elif 'dec' in keys:
+        dec = target_info['dec']
+        decdeg = Angle(dec, unit=unit.deg).degree
+    else:
+        raise ValueError('Missing declination (dec or decdeg) entry in target info')
+    
+    # proper motion
+    pm = target_info['pm']
+
+    # distance
     use_plx  = True
     if ('plx' in target_info) and ('plx_err' in target_info):
         plx      = target_info['plx']
@@ -303,13 +324,40 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     #######################################
     # target info
     #
-    radeg    = target_info['radeg']
-    decdeg   = target_info['decdeg']
-    pm       = target_info['pm']
-    pm_err   = target_info['pm_err']
+    keys = target_info.keys()
+    
+    # coordinates
+    if 'radeg' in keys:
+        radeg = target_info['radeg']
+    elif 'ra' in keys:
+        ra = target_info['ra']
+        radeg = Angle(ra, unit=unit.deg).degree * 15
+    else:
+        raise ValueError('Missing right ascension (ra or radeg) entry in target info')
 
+    if 'decdeg' in keys:
+        decdeg = target_info['decdeg']
+    elif 'dec' in keys:
+        dec = target_info['dec']
+        decdeg = Angle(dec, unit=unit.deg).degree
+    else:
+        raise ValueError('Missing declination (dec or decdeg) entry in target info')
+    
+    # proper motion
+    pm     = target_info['pm']
+    pm_err = target_info['pm_err']
+
+    miss_pm = False
+    if (np.abs(pm_err[0]-99.9) < 0.1):
+        pm_err[0] = 0
+        miss_pm = True
+
+    if (np.abs(pm_err[1]-99.9) < 0.1):
+        pm_err[1] = 0
+        miss_pm = True
+
+    # distance
     miss_dist = False
-    miss_pm   = False
     
     use_plx  = True
     if ('plx' in target_info) and ('plx_err' in target_info):
@@ -338,15 +386,7 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     
     if (use_dist is False) and (use_plx is False):
         raise ValueError('Either the distance or the parallax (and associated errors) need to be provided')
-    
-    if (np.abs(pm_err[0]-99.9) < 0.1):
-        pm_err[0] = 0
-        miss_pm = True
 
-    if (np.abs(pm_err[1]-99.9) < 0.1):
-        pm_err[1] = 0
-        miss_pm = True
-        
     #######################################
     # calculations
     #
@@ -584,25 +624,23 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
 
 
 
-if __name__ == '__main__':
-    import shine.wp1 as wp1
-            
-    target   = 'HIP 42808'
-    dates    = ['2016-01-03', '2016-03-28', '2016-12-12']
-    dra      = [2015.0, 2157.68, 2225.34]
-    dra_err  = [   4.0,    8.59,   13.18]
-    ddec     = [5432.0, 5326.27, 5106.01]
-    ddec_err = [   4.0,    8.65,   12.88]
-    
-    target   = 'HIP 58465'
+if __name__ == '__main__':            
+    target   = 'HD_169142'
     dates    = ['2015-06-07', '2015-07-05', '2016-04-21']
     dra      = [635, 644, 633]
     dra_err  = [1, 6, 4]
     ddec     = [-2368, -2363, -2335]
     ddec_err = [3, 11, 10]
-        
-    # prop     = wp1.target_database(target)
-    prop = {'radeg': 276.1240854166666, 'Jmag': 7.3099999, 'Hmag': 6.9099998, 'ID1': 'HD_169142', 'plx_err': 5.2, 'dec': '-29 46 49.325', 'dist': 145.0, 'Kmag_err': 0.02, 'pm_err': [1.5, 1.5], 'dist_err': 25.799999, 'pflag': 'N', 'agemax': 12.0, 'decdeg': -29.780368055555556, 'agemin': 3.0, 'plx': 1000/145, 'age': 6.0, 'ID2': 'xxxxx', 'Jmag_err': 0.02, 'Kmag': 6.4099998, 'ra': '18 24 29.7805', 'pm': [-2.1000000000000001, -40.200001], 'Hmag_err': 0.039999999}
     
-    # plots_old(target, dates, dra, dra_err, ddec, ddec_err, prop, filename='old.pdf')
-    plots(target, dates, dra, dra_err, ddec, ddec_err, prop, filename='new.pdf')
+    prop = {
+        'ra': '18 24 29.7805',
+        'dec': '-29 46 49.325',
+        'dist': 145.0,
+        'dist_err': 25.799999,
+        'plx': 1000/145,
+        'plx_err': 5.2,
+        'pm': [-2.10, -40.2],
+        'pm_err': [1.5, 1.5]
+    }
+    
+    plots(target, dates, dra, dra_err, ddec, ddec_err, prop)
