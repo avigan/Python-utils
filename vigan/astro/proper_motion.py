@@ -190,6 +190,19 @@ def track(dates, target_info):
     '''
     Proper motion tracks for a given target and dates
 
+    The target_info parameter is a dictionary with the target
+    properties. Mandatory fields are:
+      - ra: right ascension as a string in the form 'HH MM SS.sss'
+            or as a float in *degrees*
+      - dec: declination as a string in the form 'DD MM SS.sss'
+             or as a float in *degrees*
+      - dist or plx: distance in parsec or parallax in mas
+      - pm: proper motions for RA/DEC in mas
+
+    In addition, the following fields can be specified:
+      - dist_err or plx_err: distance or parallax error
+      - pm_err: proper motions errors
+    
     Parameters
     ----------
 
@@ -197,8 +210,7 @@ def track(dates, target_info):
         List of dates for the astrometry
 
     target_info : dict
-        Dictionary with essential target properties: radeg, decdeg, dist,
-        dist_err, plx, plx_err, pm, pm_err.
+        Dictionary with essential target properties.
 
     Returns
     -------
@@ -209,29 +221,29 @@ def track(dates, target_info):
     dra_track, ddec_track : float, array_like
         Astrometry of a background stationary object, in mas. The astrometry
         is relative to the star.
+
     '''
 
     #######################################
     # target info
     #
-    keys = target_info.keys()
     
     # coordinates
-    if 'radeg' in keys:
-        radeg = target_info['radeg']
-    elif 'ra' in keys:
-        ra = target_info['ra']
-        radeg = Angle(ra, unit=unit.deg).degree * 15
+    ra = target_info['ra']
+    if isinstance(ra, str):
+        radeg = Angle(ra, unit=unit.hour).degree
+    elif isinstance(ra, (int, float)):
+        radeg = ra        
     else:
-        raise ValueError('Missing right ascension (ra or radeg) entry in target info')
+        raise ValueError('Right ascension has not the right type')
 
-    if 'decdeg' in keys:
-        decdeg = target_info['decdeg']
-    elif 'dec' in keys:
-        dec = target_info['dec']
+    dec = target_info['dec']
+    if isinstance(dec, str):
         decdeg = Angle(dec, unit=unit.deg).degree
+    elif isinstance(dec, (int, float)):
+        radeg = dec        
     else:
-        raise ValueError('Missing declination (dec or decdeg) entry in target info')
+        raise ValueError('Declination has not the right type')
     
     # proper motion
     pm = target_info['pm']
@@ -293,8 +305,22 @@ def track(dates, target_info):
 
 
 def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, filename=''):
-    '''Proper motion plot for a given target and candidate astrometry
+    '''
+    Proper motion plot for a given target and candidate astrometry
 
+    The target_info parameter is a dictionary with the target
+    properties. Mandatory fields are:
+      - ra: right ascension as a string in the form 'HH MM SS.sss'
+            or as a float in *degrees*
+      - dec: declination as a string in the form 'DD MM SS.sss'
+             or as a float in *degrees*
+      - dist or plx: distance in parsec or parallax in mas
+      - pm: proper motions for RA/DEC in mas
+
+    In addition, the following fields can be specified:
+      - dist_err or plx_err: distance or parallax error
+      - pm_err: proper motions errors
+    
     Parameters
     ----------
 
@@ -324,25 +350,24 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     #######################################
     # target info
     #
-    keys = target_info.keys()
     
     # coordinates
-    if 'radeg' in keys:
-        radeg = target_info['radeg']
-    elif 'ra' in keys:
-        ra = target_info['ra']
-        radeg = Angle(ra, unit=unit.deg).degree * 15
+    ra = target_info['ra']
+    if isinstance(ra, str):
+        radeg = Angle(ra, unit=unit.hour).degree
+    elif isinstance(ra, (int, float)):
+        radeg = ra        
     else:
-        raise ValueError('Missing right ascension (ra or radeg) entry in target info')
+        raise ValueError('Right ascension has not the right type')
 
-    if 'decdeg' in keys:
-        decdeg = target_info['decdeg']
-    elif 'dec' in keys:
-        dec = target_info['dec']
+    dec = target_info['dec']
+    if isinstance(dec, str):
         decdeg = Angle(dec, unit=unit.deg).degree
+    elif isinstance(dec, (int, float)):
+        radeg = dec        
     else:
-        raise ValueError('Missing declination (dec or decdeg) entry in target info')
-    
+        raise ValueError('Declination has not the right type')
+
     # proper motion
     pm     = target_info['pm']
     pm_err = target_info['pm_err']
