@@ -241,7 +241,7 @@ def track(dates, target_info):
     if isinstance(dec, str):
         decdeg = Angle(dec, unit=unit.deg).degree
     elif isinstance(dec, (int, float)):
-        radeg = dec        
+        decdeg = dec
     else:
         raise ValueError('Declination has not the right type')
     
