@@ -304,7 +304,7 @@ def track(dates, target_info):
     return time, dra_track, ddec_track
 
 
-def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, filename=''):
+def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, legend_loc=1, filename=''):
     '''
     Proper motion plot for a given target and candidate astrometry
 
@@ -340,6 +340,9 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
 
     link : bool
         Link data points with their expected position if background; default is True.
+
+    legend_loc : str or int
+        Location of the legend in the RA/DEC plot
     
     filename : str
         Path and file name where to save the plot. The plot is saved only
@@ -532,19 +535,23 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
         col = colors[e]
     
         ax.errorbar(dra[e], ddec[e], xerr=dra_err[e], yerr=ddec_err[e], linestyle='none', marker='o',
-                    mew=width, ms=ms, mec=col, color=col, ecolor=col, elinewidth=width, capsize=0)
+                    mew=width, ms=ms, mec=col, color=col, ecolor=col, elinewidth=width, capsize=0,
+                    label=dates[e])
     
         if e > 0:
             idx = delay_days.astype(int)
             ax.errorbar(dra[0] - dra_track[day_min+idx[e]], ddec[0] - ddec_track[day_min+idx[e]],
                         xerr=dra_err[0], yerr=ddec_err[0], linestyle='none', marker='o',
                         mew=0, ms=ms, mec=col, color='w', ecolor=col, elinewidth=width, capsize=0, zorder=-1)
-            ax.errorbar(dra[0] - dra_track[day_min+idx[e]], ddec[0] - ddec_track[day_min+idx[e]], linestyle='none', marker='o',
-                        mew=width, ms=ms, mec=col, color='none', ecolor=col, elinewidth=width, capsize=0, zorder=+1)
+            ax.errorbar(dra[0] - dra_track[day_min+idx[e]], ddec[0] - ddec_track[day_min+idx[e]], linestyle='none',
+                        marker='o', mew=width, ms=ms, mec=col, color='none', ecolor=col, elinewidth=width, capsize=0,
+                        zorder=+1, label=dates[e]+' (if background)')
 
             if link:
                 ax.plot((dra[e], dra[0] - dra_track[day_min+idx[e]]), (ddec[e], ddec[0] - ddec_track[day_min+idx[e]]),
                         linestyle='-', color=col)
+
+    ax.legend(loc=legend_loc)
     
     # warnings
     off = 0
