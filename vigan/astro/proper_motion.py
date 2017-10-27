@@ -364,7 +364,7 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     if isinstance(dec, str):
         decdeg = Angle(dec, unit=unit.deg).degree
     elif isinstance(dec, (int, float)):
-        radeg = dec        
+        decdeg = dec        
     else:
         raise ValueError('Declination has not the right type')
 
