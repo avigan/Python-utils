@@ -1,5 +1,6 @@
 import numpy as np
 import os.path as path
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import astropy.units as unit
@@ -506,6 +507,12 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     colors = ['black', 'red', 'teal', 'orange', 'forestgreen', 'purple', 'coral', 'navy', 'gold']
     width = 2
     ms    = 8
+
+    # get fontsize
+    fs_init = matplotlib.rcParams['font.size']
+
+    # bigger font for this plot
+    matplotlib.rcParams.update({'font.size': 17})
     
     plt.figure(0, figsize=(17, 8))
     gs = gridspec.GridSpec(2, 2)
@@ -654,6 +661,8 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     if (filename != ''):
         plt.savefig(path.expanduser(filename))
 
+    # restore fontsize
+    matplotlib.rcParams.update({'font.size': fs_init})
 
 
 if __name__ == '__main__':            
