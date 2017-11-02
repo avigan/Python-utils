@@ -1,5 +1,6 @@
 import numpy as np
 import os.path as path
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import astropy.units as unit
@@ -241,7 +242,7 @@ def track(dates, target_info):
     if isinstance(dec, str):
         decdeg = Angle(dec, unit=unit.deg).degree
     elif isinstance(dec, (int, float)):
-        radeg = dec        
+        decdeg = dec
     else:
         raise ValueError('Declination has not the right type')
     
@@ -304,7 +305,7 @@ def track(dates, target_info):
     return time, dra_track, ddec_track
 
 
-def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, filename=''):
+def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, legend_loc=1, filename=''):
     '''
     Proper motion plot for a given target and candidate astrometry
 
@@ -340,6 +341,9 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
 
     link : bool
         Link data points with their expected position if background; default is True.
+
+    legend_loc : str or int
+        Location of the legend in the RA/DEC plot
     
     filename : str
         Path and file name where to save the plot. The plot is saved only
@@ -364,7 +368,7 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     if isinstance(dec, str):
         decdeg = Angle(dec, unit=unit.deg).degree
     elif isinstance(dec, (int, float)):
-        radeg = dec        
+        decdeg = dec        
     else:
         raise ValueError('Declination has not the right type')
 
@@ -503,6 +507,12 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     colors = ['black', 'red', 'teal', 'orange', 'forestgreen', 'purple', 'coral', 'navy', 'gold']
     width = 2
     ms    = 8
+
+    # get fontsize
+    fs_init = matplotlib.rcParams['font.size']
+
+    # bigger font for this plot
+    matplotlib.rcParams.update({'font.size': 17})
     
     plt.figure(0, figsize=(17, 8))
     gs = gridspec.GridSpec(2, 2)
@@ -532,19 +542,23 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
         col = colors[e]
     
         ax.errorbar(dra[e], ddec[e], xerr=dra_err[e], yerr=ddec_err[e], linestyle='none', marker='o',
-                    mew=width, ms=ms, mec=col, color=col, ecolor=col, elinewidth=width, capsize=0)
+                    mew=width, ms=ms, mec=col, color=col, ecolor=col, elinewidth=width, capsize=0,
+                    label=dates[e])
     
         if e > 0:
             idx = delay_days.astype(int)
             ax.errorbar(dra[0] - dra_track[day_min+idx[e]], ddec[0] - ddec_track[day_min+idx[e]],
                         xerr=dra_err[0], yerr=ddec_err[0], linestyle='none', marker='o',
                         mew=0, ms=ms, mec=col, color='w', ecolor=col, elinewidth=width, capsize=0, zorder=-1)
-            ax.errorbar(dra[0] - dra_track[day_min+idx[e]], ddec[0] - ddec_track[day_min+idx[e]], linestyle='none', marker='o',
-                        mew=width, ms=ms, mec=col, color='none', ecolor=col, elinewidth=width, capsize=0, zorder=+1)
+            ax.errorbar(dra[0] - dra_track[day_min+idx[e]], ddec[0] - ddec_track[day_min+idx[e]], linestyle='none',
+                        marker='o', mew=width, ms=ms, mec=col, color='none', ecolor=col, elinewidth=width, capsize=0,
+                        zorder=+1, label=dates[e]+' (if background)')
 
             if link:
                 ax.plot((dra[e], dra[0] - dra_track[day_min+idx[e]]), (ddec[e], ddec[0] - ddec_track[day_min+idx[e]]),
                         linestyle='-', color=col)
+
+    ax.legend(loc=legend_loc)
     
     # warnings
     off = 0
@@ -647,6 +661,8 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     if (filename != ''):
         plt.savefig(path.expanduser(filename))
 
+    # restore fontsize
+    matplotlib.rcParams.update({'font.size': fs_init})
 
 
 if __name__ == '__main__':            

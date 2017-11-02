@@ -16,7 +16,7 @@ setup(
         'License :: OSI Approved :: MIT License'
     ],
     keywords='image processing data analysis',
-    packages=['vigan', 'vigan.optics', 'vigan.utils','vigan.astro'],
+    packages=['vigan', 'vigan.astro', 'vigan.optics', 'vigan.utils'],
     install_requires=[
         'numpy', 'scipy', 'astropy', 'pandas', 'matplotlib'
     ],
