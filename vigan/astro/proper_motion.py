@@ -242,23 +242,23 @@ def track(dates, target_info):
     if isinstance(dec, str):
         decdeg = Angle(dec, unit=unit.deg).degree
     elif isinstance(dec, (int, float)):
-        decdeg = dec
+        decdeg = dec        
     else:
         raise ValueError('Declination has not the right type')
-    
+
     # proper motion
     pm = target_info['pm']
 
     # distance
     use_plx  = True
-    if ('plx' in target_info) and ('plx_err' in target_info):
+    if ('plx' in target_info):
         plx      = target_info['plx']
     
-        if np.abs(plx-999.9) < 0.1:
+        if np.logical_not(np.isfinite(plx)):
             use_plx = False
     
     use_dist = False
-    if (use_plx is False) and ('dist' in target_info) and ('dist_err' in target_info):
+    if (use_plx is False) and ('dist' in target_info):
         dist     = target_info['dist']
         plx      = 1000/dist
         use_dist = True
@@ -305,7 +305,7 @@ def track(dates, target_info):
     return time, dra_track, ddec_track
 
 
-def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, legend_loc=1, filename=''):
+def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, legend_loc=None, filename=''):
     '''
     Proper motion plot for a given target and candidate astrometry
 
@@ -343,7 +343,7 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
         Link data points with their expected position if background; default is True.
 
     legend_loc : str or int
-        Location of the legend in the RA/DEC plot
+        Location of the legend in the RA/DEC plot. Default is None
     
     filename : str
         Path and file name where to save the plot. The plot is saved only
@@ -377,11 +377,11 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     pm_err = target_info['pm_err']
 
     miss_pm = False
-    if (np.abs(pm_err[0]-99.9) < 0.1):
+    if np.logical_not(np.isfinite(pm_err[0])):
         pm_err[0] = 0
         miss_pm = True
 
-    if (np.abs(pm_err[1]-99.9) < 0.1):
+    if np.logical_not(np.isfinite(pm_err[1])):
         pm_err[1] = 0
         miss_pm = True
 
@@ -393,10 +393,10 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
         plx      = target_info['plx']
         plx_err  = target_info['plx_err']
     
-        if plx > 900:
+        if np.logical_not(np.isfinite(plx)):
             use_plx = False
         else:
-            if (not np.isfinite(plx_err)) or (np.abs(plx_err-99.9) < 0.1):
+            if np.logical_not(np.isfinite(plx_err)):            
                 print('Missing parallax error: using null error.')
                 miss_dist = True
                 plx_err = 0
@@ -408,7 +408,7 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
         plx      = 1000/dist
         use_dist = True
         
-        if not np.isfinite(dist_err):
+        if np.logical_not(np.isfinite(dist_err)):
             print('Missing distance error: using null error.')
             miss_dist = True
             dist_err = 0
@@ -558,7 +558,8 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
                 ax.plot((dra[e], dra[0] - dra_track[day_min+idx[e]]), (ddec[e], ddec[0] - ddec_track[day_min+idx[e]]),
                         linestyle='-', color=col)
 
-    ax.legend(loc=legend_loc)
+    if legend_loc is not None:
+        ax.legend(loc=legend_loc)
     
     # warnings
     off = 0
