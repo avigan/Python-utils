@@ -310,20 +310,21 @@ def sphere_pupil(dim, diameter, dead_actuator_diameter=0.025, spiders=False, spi
     pup = disc_obstructed(dim, diameter, obs, diameter=True, strict=False, cpix=True)
 
     # spiders
-    spdr = max(1, spdr*dim)
-    ref = np.zeros((dim, dim))
-    ref[int(dim//2):, int((dim-spdr)/2+1):int((dim+spdr)//2)] = 1
+    if spiders:
+        spdr = max(1, spdr*dim)
+        ref = np.zeros((dim, dim))
+        ref[int(dim//2):, int((dim-spdr)/2+1):int((dim+spdr)//2)] = 1
 
-    cc = dim/2
-    spdr1 = _rotate_interp(ref, -5.5, (cc, cc+diameter/2))
-    spdr2 = _rotate_interp(np.rot90(ref, k=1),  5.5, (cc+diameter/2, cc))
-    
-    spdr0 = spdr1 + spdr2
-    spdr0 = np.roll(np.roll(spdr0, -1, axis=0), -1, axis=1) + np.rot90(spdr0, k=2)
-    spdr0 = _rotate_interp(spdr0, 45+spiders_orientation, (cc, cc))
-    spdr0 = np.roll(np.roll(spdr0, 1, axis=0), 1, axis=1)
-    
-    pup *= 1-spdr0
+        cc = dim/2
+        spdr1 = _rotate_interp(ref, -5.5, (cc, cc+diameter/2))
+        spdr2 = _rotate_interp(np.rot90(ref, k=1),  5.5, (cc+diameter/2, cc))
+
+        spdr0 = spdr1 + spdr2
+        spdr0 = np.roll(np.roll(spdr0, -1, axis=0), -1, axis=1) + np.rot90(spdr0, k=2)
+        spdr0 = _rotate_interp(spdr0, 45+spiders_orientation, (cc, cc))
+        spdr0 = np.roll(np.roll(spdr0, 1, axis=0), 1, axis=1)
+
+        pup *= 1-spdr0
     
     # dead actuators    
     xarr = np.array([ 0.1534,  -0.0984, -0.1963,  0.2766,  0.3297])
