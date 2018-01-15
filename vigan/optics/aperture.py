@@ -330,8 +330,8 @@ def sphere_pupil(dim, diameter, dead_actuator_diameter=0.025, spiders=False, spi
     xarr = np.array([ 0.1534,  -0.0984, -0.1963,  0.2766,  0.3297])
     yarr = np.array([-0.0768,  -0.1240, -0.3542, -0.2799, -0.2799])
     for i in range(len(xarr)):
-        cx = xarr[i] * diameter + diameter/2
-        cy = yarr[i] * diameter + diameter/2
+        cx = xarr[i] * diameter + dim/2
+        cy = yarr[i] * diameter + dim/2
         
         dead = disc(dim, dead_actuator_diameter*diameter, center=(cx, cy), invert=True)
 
