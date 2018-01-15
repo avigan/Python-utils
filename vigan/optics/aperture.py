@@ -273,8 +273,8 @@ def _rotate_interp(array, alpha, center, mode='constant', cval=0):
     return rotated
 
 
-def sphere_pupil_internal(dim, diameter, dead_actuator_diameter=0.025, spiders=False, spiders_orientation=0):
-    '''SPHERE internal pupil with dead actuators mask
+def sphere_pupil(dim, diameter, dead_actuator_diameter=0.025, spiders=False, spiders_orientation=0):
+    '''SPHERE pupil with dead actuators mask and spiders
 
     Parameters
     ----------
