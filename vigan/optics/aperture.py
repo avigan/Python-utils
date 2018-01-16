@@ -125,7 +125,7 @@ def disc_obstructed(dim, size, obs, **kwargs):
         raise ValueError('obs value must be within [0,1]')
         return None
         
-    ap_out = disc(dim, size, **kwargs)    
+    ap_out = disc(dim, size, **kwargs)
     ap_in = disc(dim, size*obs, **kwargs)
         
     return ap_out - ap_in
@@ -313,8 +313,8 @@ def sphere_pupil(dim, diameter, dead_actuator_diameter=0.025, spiders=False, spi
     if spiders:
         spdr = max(1, spdr*dim)
         ref = np.zeros((dim, dim))
-        ref[int(dim//2):, int((dim-spdr)/2+1):int((dim+spdr)//2)] = 1
-
+        ref[int(dim//2):, int((dim-spdr)/2+1):int((dim+spdr)//2)+1] = 1
+        
         cc = dim/2
         spdr1 = _rotate_interp(ref, -5.5, (cc, cc+diameter/2))
         spdr2 = _rotate_interp(np.rot90(ref, k=1),  5.5, (cc+diameter/2, cc))
@@ -347,12 +347,15 @@ if __name__ == "__main__":
     diam = 81
     obs  = 0.2
     
-    d1 = disc_obstructed(dim, diam, obs, cpix=False, center=(), strict=True, invert=True)
+    d1 = disc_obstructed(dim, diam, obs, cpix=False, center=(), strict=True)
+    d2 = sphere_pupil(dim, dim, spiders=1)
     
     r, t = coordinates(dim, diam, cpix=False, strict=False, center=(100, 111))
 
+    plt.figure(1, figsize=(15, 7))
     plt.clf()
-    plt.imshow(d1)
+    plt.subplot(121)
+    plt.imshow(d1, vmin=0, vmax=1, origin=1)
+    plt.subplot(122)
+    plt.imshow(d2, vmin=0, vmax=1, origin=1)
 
-    # plt.clf()
-    # plt.imshow(sphere_pupil_internal(384, 384))
