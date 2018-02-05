@@ -687,7 +687,16 @@ class DS9Viewer:
         pass
 
     def show(self, array, new=False):
-        '''Display an image or cube in ds9'''
+        '''Display an image or cube in ds9
+
+        Parameters
+        ----------
+        array : array
+            The array to display
+
+        new : bool
+            Create a new frame
+        '''
 
         if new:
             self.frame('new')
@@ -695,22 +704,34 @@ class DS9Viewer:
         self.DS9.showArray(array)
 
         
-    def point(self, cx, cy, color='green', thick=1, fixed=False, style='cross'):
-        '''
-        Display a point on the current image
+    def point(self, center, marker='cross', color='green', thick=1, fixed=False):
+        '''Display a point on the current image
 
-        cx,cy - point center
-        
-        color - color of the point (default: green, red, blue, cyan, magenta, yellow, black, white)
-        thick - thickness of the line
-        fixed - position is fixed
-        style - type of the point (default: cross, circle, box, diamond, x, arrow)
-        '''
-        
-        # FITS convention
-        cx += 1
-        cy += 1
+        Parameters
+        ----------
+        center : tuple
+            Point center        
 
+        marker : str 
+            Type of the point (default: cross, circle, box, diamond,
+            x, arrow). Default is cross
+
+        color : str
+            Color of the point (default: green, red, blue, cyan,
+            magenta, yellow, black, white). Default is green
+
+        thick : int 
+            Thickness of the line. Default is 1
+
+        fixed : bool
+            Position is fixed. Default is False
+
+        '''
+
+        # decompose center + FITS convention
+        cx = center[0] + 1
+        cy = center[1] + 1
+        
         # fixed
         if fixed:
             move = 0
@@ -720,28 +741,44 @@ class DS9Viewer:
         # format command
         cmd  = 'regions'
         data = 'physical; point {:f} {:f} '.format(cx, cy) + \
-               '# point={:s} color={:s} width={:.0f} move={:d}'.format(style, color, thick, move)
+               '# point={:s} color={:s} width={:.0f} move={:d}'.format(marker, color, thick, move)
         
         # send command
         self.DS9.xpaset(cmd, data=data)
 
         
-    def box(self, cx, cy, w, h, angle=0, color='green', thick=1, fixed=False):
+    def box(self, center, w, h, angle=0, color='green', thick=1, fixed=False):
         '''
         Display a box on the current image
 
-        cx,cy - box center
-        w,h   - box width and height
+        Parameters
+        ----------
+        center : tuple
+            Box center
 
-        angle - orentation angle of the box
-        color - color of the box
-        thick - thickness of the line
-        fixed - position is fixed
+        width : float
+            Box width
+
+        height : float
+            Box height
+
+        angle : float
+            Orientation angle of the box, in degrees. Default is 0
+
+        color : str
+            Color of the point (default: green, red, blue, cyan,
+            magenta, yellow, black, white). Default is green
+
+        thick : int 
+            Thickness of the line. Default is 1
+
+        fixed : bool
+            Position is fixed. Default is False
         '''
         
-        # FITS convention
-        cx += 1
-        cy += 1
+        # decompose center + FITS convention
+        cx = center[0] + 1
+        cy = center[1] + 1
 
         # fixed
         if fixed:
@@ -758,21 +795,32 @@ class DS9Viewer:
         self.DS9.xpaset(cmd, data=data)
 
         
-    def circle(self, cx, cy, r, color='green', thick=1, fixed=False):
+    def circle(self, center, radius=20, color='green', thick=1, fixed=False):
         '''
         Display a circle on the current image
 
-        cx,cy - circle center
-        r     - circle radius
+        Parameters
+        ----------
+        center : tuple
+            Circle center
 
-        color - color of the circle
-        thick - thickness of the line
-        fixed - position is fixed
+        radius : float
+            Circle radius. Default is 20 pixels
+
+        color : str
+            Color of the point (default: green, red, blue, cyan,
+            magenta, yellow, black, white). Default is green
+
+        thick : int 
+            Thickness of the line. Default is 1
+
+        fixed : bool
+            Position is fixed. Default is False
         '''
         
-        # FITS convention
-        cx += 1
-        cy += 1
+        # decompose center + FITS convention
+        cx = center[0] + 1
+        cy = center[1] + 1
 
         # fixed
         if fixed:
@@ -782,29 +830,45 @@ class DS9Viewer:
 
         # format command
         cmd  = 'regions'
-        data = 'physical; circle {:f} {:f} {:f} '.format(cx, cy, r) + \
+        data = 'physical; circle {:f} {:f} {:f} '.format(cx, cy, radius) + \
                '# color={:s} width={:.0f} move={:d}'.format(color, thick, move)
         
         # send command
         self.DS9.xpaset(cmd, data=data)
 
     
-    def ellipse(self, cx, cy, rx, ry, angle=0, color='green', thick=1, fixed=False):
+    def ellipse(self, center, xradius=20, yradius=20, angle=0, color='green', thick=1, fixed=False):
         '''
         Display an ellipse on the current image
 
-        cx,cy - ellipse center
-        rx,ry - ellipse radii
+        Parameters
+        ----------
+        center : tuple
+            Ellipse center
 
-        angle - ellipse angle
-        color - color of the ellipse
-        thick - thickness of the line
-        fixed - position is fixed
+        xradius : float
+            Ellipse x radius. Default is 20 pixels
+
+        yradius : float
+            Ellipse y radius. Default is 20 pixels
+
+        angle : float
+            Orientation angle of the ellipse, in degrees. Default is 0
+
+        color : str
+            Color of the point (default: green, red, blue, cyan,
+            magenta, yellow, black, white). Default is green
+
+        thick : int 
+            Thickness of the line. Default is 1
+
+        fixed : bool
+            Position is fixed. Default is False
         '''
         
-        # FITS convention
-        cx += 1
-        cy += 1
+        # decompose center + FITS convention
+        cx = center[0] + 1
+        cy = center[1] + 1
 
         # fixed
         if fixed:
@@ -814,31 +878,41 @@ class DS9Viewer:
 
         # format command
         cmd  = 'regions'
-        data = 'physical; ellipse {:f} {:f} {:f} {:f} {:f} '.format(cx, cy, rx, ry, angle) + \
+        data = 'physical; ellipse {:f} {:f} {:f} {:f} {:f} '.format(cx, cy, xradius, yradius, angle) + \
                '# color={:s} width={:.0f} move={:d}'.format(color, thick, move)
 
         # send command
         self.DS9.xpaset(cmd, data=data)
 
         
-    def line(self, x0, y0, x1, y1, color='green', thick=1, fixed=False, text=''):
+    def line(self, center0, center1, color='green', thick=1, fixed=False, text=''):
         '''
         Display a line on the current image
 
-        x0,y0 - coordinates of the first end
-        x1,y1 - coordinates of the other end
+        Parameters
+        ----------
+        center0 : tuple
+            First end center
 
-        angle - ellipse angle
-        color - color of the ellipse
-        thick - thickness of the line
-        fixed - position is fixed
+        center1 : tuple
+            Second end center
+
+        color : str
+            Color of the point (default: green, red, blue, cyan,
+            magenta, yellow, black, white). Default is green
+
+        thick : int 
+            Thickness of the line. Default is 1
+
+        fixed : bool
+            Position is fixed. Default is False
         '''
         
-        # FITS convention
-        x0 += 1
-        y0 += 1
-        x1 += 1
-        y1 += 1
+        # decompose center + FITS convention
+        cx0 = center0[0] + 1
+        cy0 = center0[1] + 1
+        cx1 = center1[0] + 1
+        cy1 = center1[1] + 1
 
         # fixed
         if fixed:
@@ -848,7 +922,7 @@ class DS9Viewer:
 
         # format command
         cmd  = 'regions'
-        data = 'physical; line {:f} {:f} {:f} {:f} {:f} '.format(x0, y0, x1, y1) + \
+        data = 'physical; line {:f} {:f} {:f} {:f} {:f} '.format(cx0, cy0, cx1, cy1) + \
                '# color={:s} width={:.0f} move={:d} '.format(color, thick, move) + \
                'text={{"{:s}"}}'.format(text)
 
@@ -856,49 +930,78 @@ class DS9Viewer:
         self.DS9.xpaset(cmd, data=data)
 
         
-    def frame(self, cmd, arg=None):
+    def frame(self, cmd, num=None):
+        '''
+        Frame operations
+
+        List of frame operations:
+          - new: new frame
+          - delete, del: delete current frame
+          - delete all, del all: delete all frames
+          - tile: tile frames
+          - single: single out current frame
+          - previous, prev, p: got to previous frame
+          - next, n: go to next frame
+          - set: set frame to number
+
+        Parameters
+        ----------
+        cmd : str
+            Frame command
+
+        num : int
+            Frame number
+        '''
         cmd = cmd.lower()
 
         if cmd == 'new':
             self.DS9.xpaset('frame new')
-        elif cmd == 'delete':
+        elif (cmd == 'delete') or (cmd == 'del'):
             self.DS9.xpaset('frame delete')
-        elif cmd == 'del':
-            self.DS9.xpaset('frame delete')
-        elif cmd == 'delete all':
-            self.DS9.xpaset('frame delete all')
-        elif cmd == 'del all':
+        elif (cmd == 'delete all') or (cmd == 'del all'):
             self.DS9.xpaset('frame delete all')
         elif cmd == 'tile':
             self.DS9.xpaset('tile')
         elif cmd == 'single':
             self.DS9.xpaset('single')
-        elif cmd == 'prev':
+        elif (cmd == 'previous') or (cmd == 'prev') or (cmd == 'p'):
             self.DS9.xpaset('frame prev')
-        elif cmd == 'next':
+        elif (cmd == 'next') or (cmd == 'n'):
             self.DS9.xpaset('frame next')
         elif cmd == 'set':
-            if (arg is None):
+            if (num is None):
                 raise ValueError('You must pass a frame number')
-            self.DS9.xpaset('frame frameno {0}'.format(arg))
+            self.DS9.xpaset('frame frameno {0}'.format(num))
         else:
-            print('Unknown command "'+cmd+'" for frame.')
+            print('Unknown command {:s} for frame.'.format(cmd))
 
-            
-    def scale(self, cmd, mode='minmax'):
-        cmd  = cmd.lower()
-        mode = mode.lower()
 
-        if cmd == 'linear':
+    def scale(self, scl='linear', cuts='minmax'):
+        '''
+        Image scale operations
+
+        Parameters
+        ----------
+        scl : str
+            Scale mode
+
+        cuts : str
+            Cuts mode
+        '''
+        
+        scl  = scl.lower()
+        cuts = cuts.lower()
+
+        if (scl == 'linear') or (scl == 'lin'):
             self.DS9.xpaset('scale linear')
-        elif cmd == 'sqrt':
+        elif scl == 'sqrt':
             self.DS9.xpaset('scale sqrt')
-        elif cmd == 'log':
+        elif scl == 'log':
             self.DS9.xpaset('scale log 100')
 
-        if mode == 'minmax':
+        if (cuts == 'minmax') or (cuts == 'mm'):
             self.DS9.xpaset('scale mode minmax')
-        elif mode == 'zscale':
+        elif (cuts == 'zscale') or (cuts == 'z'):
             self.DS9.xpaset('scale mode zscale')
 
             
@@ -906,14 +1009,19 @@ class DS9Viewer:
         '''
         Read point coordinates from user-selection on image
 
-        returns cx,cy the center of the selected point.
+        Returns
+        -------
+        center : tuple
+            Center of the selected point
         '''
-        
+
+        # format command
         cmd = 'imexam coordinate image'
 
+        # send command
         point = self.DS9.xpaget(cmd).split()
 
-        # zero-numbering convention
+        # FITS convention
         cx = float(point[0]) - 1
         cy = float(point[1]) - 1
 
@@ -924,7 +1032,10 @@ class DS9Viewer:
         '''
         Zoom image to a given value
 
-        zoom - zoom value
+        Parameters
+        ----------
+        zoom : float
+            Zoom value
         '''
 
         # format command
@@ -934,22 +1045,26 @@ class DS9Viewer:
         self.DS9.xpaset(cmd)
 
         
-    def pan(self, *arg):
+    def pan(self, center=None):
         '''
         Pan image to a specific location
 
-        cx,cy - pan location
-        
-        Pass no argument to center image
+        Parameters
+        ----------
+        center : tupple
+            Pan location. Default is None to recenter image
         '''
-
-        # format command
-        if len(arg) == 0:
+        
+        if center is None:
+            # format command
             cmd = 'frame center'
-        elif len(arg) == 2:
-            cmd = 'pan to {:f} {:f}'.format(float(arg[0]), float(arg[1]))
         else:
-            print('pan() function accepts either 0 or 2 arguments')
+            # decompose center + FITS convention
+            cx = center[0] + 1
+            cy = center[1] + 1
+
+            # format command
+            cmd = 'pan to {:f} {:f}'.format(cx, float(cy))
 
         # send command
         self.DS9.xpaset(cmd)
