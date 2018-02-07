@@ -388,11 +388,12 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     # distance
     miss_dist = False
     
-    use_plx  = True
+    use_plx = False
     if ('plx' in target_info) and ('plx_err' in target_info):
         plx      = target_info['plx']
         plx_err  = target_info['plx_err']
-    
+        use_plx  = True
+        
         if np.logical_not(np.isfinite(plx)):
             use_plx = False
         else:
@@ -412,7 +413,7 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
             print('Missing distance error: using null error.')
             miss_dist = True
             dist_err = 0
-    
+            
     if (use_dist is False) and (use_plx is False):
         raise ValueError('Either the distance or the parallax (and associated errors) need to be provided')
 
@@ -666,7 +667,7 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     matplotlib.rcParams.update({'font.size': fs_init})
 
 
-if __name__ == '__main__':            
+if __name__ == '__main__':
     target   = 'HD_169142'
     dates    = ['2015-06-07', '2015-07-05', '2016-04-21']
     dra      = [635, 644, 633]
