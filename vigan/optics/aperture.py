@@ -375,11 +375,12 @@ def vlt_pupil(dim, diameter, spiders=False, spiders_orientation=0, spiders_thick
 
 
 def sphere_irdis_pupil(dim, dead_actuator_diameter=0.025, spiders=False,
-                       spiders_thickness=0.008, spiders_orientation=0):
+                       spiders_orientation=0):
     '''SPHERE pupil with dead actuators mask and spiders. Measured from a
     real pupil image acquired with IRDIS. In this SPHERE pupil, the origin
     and angle of the spiders are tweaked to match exactly the pupil as 
     seen by SPHERE/IRDIS. The diameter of the pupil is fixed to 384 pixels.
+    Spiders thickness is also fixed to 3 pixels.
 
     Parameters
     ----------
@@ -392,10 +393,6 @@ def sphere_irdis_pupil(dim, dead_actuator_diameter=0.025, spiders=False,
 
     spiders : bool
         Draw spiders. Default is False
-
-    spiders_thickness : float
-        Thickness of the spiders, in fraction of the pupil
-        diameter. Default is 0.008
 
     spiders_orientation : float
         Orientation of the spiders. The zero-orientation corresponds
@@ -418,6 +415,9 @@ def sphere_irdis_pupil(dim, dead_actuator_diameter=0.025, spiders=False,
     # central obscuration (in fraction of the pupil)
     obs = 1100/8000
 
+    # spiders_thickness = 0.008    
+    spdr = 3
+    
     # spiders
     if spiders:
         # adds some padding on the borders
@@ -425,23 +425,29 @@ def sphere_irdis_pupil(dim, dead_actuator_diameter=0.025, spiders=False,
 
         # dimensions
         cc = tdim // 2
-        spdr = int(max(1, spiders_thickness*dim))
 
-        ref = np.zeros((tdim, tdim))
-        ref[cc:, cc+2:cc+spdr+2] = 1
-        spider1 = _rotate_interp(ref, -5.1, (cc, cc+diameter/2))
+        # spiders extension
+        ext = (spdr-1) // 2
 
+        sh  = 3
         ref = np.zeros((tdim, tdim))
-        ref[:cc, cc-spdr+1:cc+1] = 1
-        spider2 = _rotate_interp(ref, -5.1, (cc, cc-diameter/2))
+        ref[cc:, cc-ext+sh:cc+ext+1+sh] = 1
+        spider1 = _rotate_interp(ref, -5.3, (cc, cc+diameter/2))
+
+        sh  = 0
+        ref = np.zeros((tdim, tdim))
+        ref[:cc, cc-ext+sh:cc+ext+1+sh] = 1
+        spider2 = _rotate_interp(ref, -5.5, (cc, cc-diameter/2))
         
+        sh  = 2
         ref = np.zeros((tdim, tdim))
-        ref[cc+1:cc+spdr+1, cc:] = 1
+        ref[cc-ext+sh:cc+ext+1+sh, cc:] = 1
         spider3 = _rotate_interp(ref, 5.5, (cc+diameter/2, cc))
         
+        sh  = 0
         ref = np.zeros((tdim, tdim))
-        ref[cc-spdr+1+2:cc+1+2, :cc] = 1
-        spider4 = _rotate_interp(ref, 5.7, (cc-diameter/2, cc))
+        ref[cc-ext+sh:cc+ext+1+sh, :cc] = 1
+        spider4 = _rotate_interp(ref, 5.5, (cc-diameter/2, cc))
 
         spider0 = spider1 + spider2 + spider3 + spider4
 
