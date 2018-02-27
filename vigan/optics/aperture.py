@@ -298,7 +298,7 @@ def _rotate_spider_interp(array, alpha0, center0, alpha1, center1):
     return rotated
 
 
-def vlt_pupil(dim, diameter, spiders=False, spiders_orientation=0):
+def vlt_pupil(dim, diameter, spiders=False, spiders_orientation=0, spiders_thickness=0.008):
     '''Very Large Telescope theoretical pupil with central obscuration and spiders
 
     Parameters
@@ -312,6 +312,10 @@ def vlt_pupil(dim, diameter, spiders=False, spiders_orientation=0):
     spiders : bool
         Draw spiders. Default is False
 
+    spiders_thickness : float
+        Thickness of the spiders, in fraction of the pupil
+        diameter. Default is 0.008
+
     spiders_orientation : float
         Orientation of the spiders. The zero-orientation corresponds
         to the orientation of the spiders when observing in ELEV
@@ -324,9 +328,8 @@ def vlt_pupil(dim, diameter, spiders=False, spiders_orientation=0):
 
     '''
 
-    # central obscuration & spiders (in fraction of the pupil)
+    # central obscuration (in fraction of the pupil)
     obs  = 1100/8000
-    spdr = 0.008
 
     # spiders
     if spiders:
@@ -335,7 +338,7 @@ def vlt_pupil(dim, diameter, spiders=False, spiders_orientation=0):
 
         # dimensions
         cc = tdim // 2
-        spdr = int(max(1, spdr*dim))
+        spdr = int(max(1, spiders_thickness*dim))
             
         ref = np.zeros((tdim, tdim))
         ref[cc:, cc:cc+spdr] = 1
@@ -371,9 +374,9 @@ def vlt_pupil(dim, diameter, spiders=False, spiders_orientation=0):
     return pup
 
 
-def sphere_pupil(dim, diameter, dead_actuator_diameter=0.025, spiders=False, spiders_orientation=0):
-    '''
-    SPHERE pupil with dead actuators mask and spiders. Measured from a
+def sphere_pupil(dim, diameter, dead_actuator_diameter=0.025, spiders=False,
+                 spiders_thickness=0.008, spiders_orientation=0):
+    '''SPHERE pupil with dead actuators mask and spiders. Measured from a
     real pupil image acquired with IRDIS. In this SPHERE pupil, the origin
     and angle of the spiders are tweaked to match exactly the pupil as 
     seen by SPHERE.
@@ -387,10 +390,15 @@ def sphere_pupil(dim, diameter, dead_actuator_diameter=0.025, spiders=False, spi
         Diameter the disk
 
     dead_actuator_diameter : float
-        Size of the dead actuators mask, in fraction of the pupil diameter
+        Size of the dead actuators mask, in fraction of the pupil
+        diameter. Default is 0.025
 
     spiders : bool
         Draw spiders. Default is False
+
+    spiders_thickness : float
+        Thickness of the spiders, in fraction of the pupil
+        diameter. Default is 0.008
 
     spiders_orientation : float
         Orientation of the spiders. The zero-orientation corresponds
@@ -404,9 +412,8 @@ def sphere_pupil(dim, diameter, dead_actuator_diameter=0.025, spiders=False, spi
 
     '''
 
-    # central obscuration & spiders (in fraction of the pupil)
-    obs  = 1100/8000
-    spdr = 0.008
+    # central obscuration (in fraction of the pupil)
+    obs = 1100/8000
 
     # spiders
     if spiders:
@@ -415,8 +422,8 @@ def sphere_pupil(dim, diameter, dead_actuator_diameter=0.025, spiders=False, spi
 
         # dimensions
         cc = tdim // 2
-        spdr = int(max(1, spdr*dim))
-            
+        spdr = int(max(1, spiders_thickness*dim))
+
         ref = np.zeros((tdim, tdim))
         ref[cc:, cc+2:cc+spdr+2] = 1
         spider1 = _rotate_interp(ref, -5.1, (cc, cc+diameter/2))
