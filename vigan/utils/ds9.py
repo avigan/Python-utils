@@ -464,7 +464,7 @@ def _splitDict(inDict, keys):
     return outDict  
 
 
-class DS9Win:
+class ds9Win:
     '''An object that talks to a particular window on ds9
     
     Inputs:
@@ -666,7 +666,7 @@ class DS9Win:
         )
 
     
-class DS9Viewer:
+class ds9Viewer:
     '''
     User-friendly interface for using ds9 from Python.
 
@@ -681,7 +681,7 @@ class DS9Viewer:
     '''
 
     _defName = 'PyVis'
-    DS9 = DS9Win(_defName)
+    ds9 = ds9Win(_defName)
     
     def __init__(self, name=_defName):
         pass
@@ -701,7 +701,7 @@ class DS9Viewer:
         if new:
             self.frame('new')
         
-        self.DS9.showArray(array)
+        self.ds9.showArray(array)
 
         
     def point(self, center, marker='cross', color='green', thick=1, fixed=False):
@@ -744,7 +744,7 @@ class DS9Viewer:
                '# point={:s} color={:s} width={:.0f} move={:d}'.format(marker, color, thick, move)
         
         # send command
-        self.DS9.xpaset(cmd, data=data)
+        self.ds9.xpaset(cmd, data=data)
 
         
     def box(self, center, w, h, angle=0, color='green', thick=1, fixed=False):
@@ -792,7 +792,7 @@ class DS9Viewer:
                '# color={:s} width={:.0f} move={:d}'.format(color, thick, move)
 
         # send command
-        self.DS9.xpaset(cmd, data=data)
+        self.ds9.xpaset(cmd, data=data)
 
         
     def circle(self, center, radius=20, color='green', thick=1, fixed=False):
@@ -834,7 +834,7 @@ class DS9Viewer:
                '# color={:s} width={:.0f} move={:d}'.format(color, thick, move)
         
         # send command
-        self.DS9.xpaset(cmd, data=data)
+        self.ds9.xpaset(cmd, data=data)
 
     
     def ellipse(self, center, xradius=20, yradius=20, angle=0, color='green', thick=1, fixed=False):
@@ -882,7 +882,7 @@ class DS9Viewer:
                '# color={:s} width={:.0f} move={:d}'.format(color, thick, move)
 
         # send command
-        self.DS9.xpaset(cmd, data=data)
+        self.ds9.xpaset(cmd, data=data)
 
         
     def line(self, center0, center1, color='green', thick=1, fixed=False, text=''):
@@ -927,7 +927,7 @@ class DS9Viewer:
                'text={{"{:s}"}}'.format(text)
 
         # send command
-        self.DS9.xpaset(cmd, data=data)
+        self.ds9.xpaset(cmd, data=data)
 
         
     def frame(self, cmd, num=None):
@@ -955,23 +955,23 @@ class DS9Viewer:
         cmd = cmd.lower()
 
         if cmd == 'new':
-            self.DS9.xpaset('frame new')
+            self.ds9.xpaset('frame new')
         elif (cmd == 'delete') or (cmd == 'del'):
-            self.DS9.xpaset('frame delete')
+            self.ds9.xpaset('frame delete')
         elif (cmd == 'delete all') or (cmd == 'del all'):
-            self.DS9.xpaset('frame delete all')
+            self.ds9.xpaset('frame delete all')
         elif cmd == 'tile':
-            self.DS9.xpaset('tile')
+            self.ds9.xpaset('tile')
         elif cmd == 'single':
-            self.DS9.xpaset('single')
+            self.ds9.xpaset('single')
         elif (cmd == 'previous') or (cmd == 'prev') or (cmd == 'p'):
-            self.DS9.xpaset('frame prev')
+            self.ds9.xpaset('frame prev')
         elif (cmd == 'next') or (cmd == 'n'):
-            self.DS9.xpaset('frame next')
+            self.ds9.xpaset('frame next')
         elif cmd == 'set':
             if (num is None):
                 raise ValueError('You must pass a frame number')
-            self.DS9.xpaset('frame frameno {0}'.format(num))
+            self.ds9.xpaset('frame frameno {0}'.format(num))
         else:
             print('Unknown command {:s} for frame.'.format(cmd))
 
@@ -993,16 +993,16 @@ class DS9Viewer:
         cuts = cuts.lower()
 
         if (scl == 'linear') or (scl == 'lin'):
-            self.DS9.xpaset('scale linear')
+            self.ds9.xpaset('scale linear')
         elif scl == 'sqrt':
-            self.DS9.xpaset('scale sqrt')
+            self.ds9.xpaset('scale sqrt')
         elif scl == 'log':
-            self.DS9.xpaset('scale log 100')
+            self.ds9.xpaset('scale log 100')
 
         if (cuts == 'minmax') or (cuts == 'mm'):
-            self.DS9.xpaset('scale mode minmax')
+            self.ds9.xpaset('scale mode minmax')
         elif (cuts == 'zscale') or (cuts == 'z'):
-            self.DS9.xpaset('scale mode zscale')
+            self.ds9.xpaset('scale mode zscale')
 
             
     def imexam(self):
@@ -1019,7 +1019,7 @@ class DS9Viewer:
         cmd = 'imexam coordinate image'
 
         # send command
-        point = self.DS9.xpaget(cmd).split()
+        point = self.ds9.xpaget(cmd).split()
 
         # FITS convention
         cx = float(point[0]) - 1
@@ -1042,7 +1042,7 @@ class DS9Viewer:
         cmd = 'zoom to {:f}'.format(zoom)
 
         # send command
-        self.DS9.xpaset(cmd)
+        self.ds9.xpaset(cmd)
 
         
     def pan(self, center=None):
@@ -1067,7 +1067,7 @@ class DS9Viewer:
             cmd = 'pan to {:f} {:f}'.format(cx, float(cy))
 
         # send command
-        self.DS9.xpaset(cmd)
+        self.ds9.xpaset(cmd)
 
         
 if __name__ == '__main__':
