@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.fftpack as fft
 
-import vigan.utils.aperture as aperture
+import vigan.optics.aperture as aperture
 
 
 def single_power(dim, Dpup, error, power=-2., fmin=None, fmax=None):
