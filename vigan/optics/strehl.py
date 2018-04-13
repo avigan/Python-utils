@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import scipy.fftpack as fft
 
-#import vigan.utils.imutils as imutils
 from ..utils import imutils
 from . import aperture
 
@@ -16,7 +15,37 @@ def strehl(img, sampling, center=True, rebin=2,
 
     Parameters
     ----------
-    
+    img : array
+        PSF image
+
+    sampling : float
+        Number of pixels sampling one resolution element (lambda/D)
+
+    center : bool
+        Recenter the PSF. Default value is True
+
+    rebin : int
+        Rebin factor for accurate recentering. Must be even. Default is 2
+
+    background_fit : bool
+        Fit and subtract the background from the OTF. Default is True
+
+    background_fit_order : bool
+        Order of the polynomial to fit the background in the OTF. Default is 2
+
+    pixel_tf : bool
+        Taken into account the pixel transfer function. Default is True
+
+    central_obscuration : float
+        Value of the central obscuration. Default is 0
+
+    disp : bool
+        Display a summary plot. Default is False
+
+    Returns
+    -------
+    strehl : float
+        Strehl ratio measured on the PSF
     '''
 
     dim = img.shape[-1]
