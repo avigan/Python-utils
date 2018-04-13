@@ -5,4 +5,6 @@ from . import ds9
 from . import fit
 from . import imutils
 from . import prof
-from . import sendmail
+
+from .sendmail import sendmail
+from .convert import *
