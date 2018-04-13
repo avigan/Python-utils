@@ -124,7 +124,7 @@ def _findApp(appName, subDirs=None, doRaise=True):
     Returns a path to the application's directory.
     Return None or raise RuntimeError if not found.
     '''
-    appDirs = ['/Applications', '~/Applications']
+    appDirs = ['/Applications', '~/Applications', '~/bin']
     if subDirs is None:
         subDirs = [None]
     dirTrials = []
@@ -134,6 +134,7 @@ def _findApp(appName, subDirs=None, doRaise=True):
                 trialDir = os.path.join(appDir, subDir)
             else:
                 trialDir = appDir
+            trialDir = os.path.expanduser(trialDir)
             dirTrials.append(trialDir)
             if os.path.exists(os.path.join(trialDir, appName)):
                 _addToPATH(trialDir)
@@ -209,10 +210,8 @@ def _findDS9AndXPA():
 
         # look for ds9 and xpa inside of "ds9.app" or "SAOImage DS9.app"
         # in the standard application locations
-        ds9Dir = _findApp('ds9', [
-            'SAOImage DS9.app/Contents/MacOS',
-            'SAOImageDS9.app/Contents/MacOS',
-        ], doRaise=False)
+        ds9Dir = _findApp('ds9', doRaise=False)
+        
         foundDS9 = (ds9Dir is not None)
         if foundDS9:
             _DS9Path = os.path.join(ds9Dir, 'ds9')
@@ -464,7 +463,7 @@ def _splitDict(inDict, keys):
     return outDict  
 
 
-class ds9Win:
+class DS9Window:
     '''An object that talks to a particular window on ds9
     
     Inputs:
@@ -498,7 +497,7 @@ class ds9Win:
             args=(_DS9Path, '-title', self.template, '-port', '0'),
             cwd=_DirFromWhichToRunDS9, 
         )
-
+        
         startTime = time.time()
         while True:
             time.sleep(_OpenCheckInterval)
@@ -666,7 +665,7 @@ class ds9Win:
         )
 
     
-class ds9Viewer:
+class Viewer:
     '''
     User-friendly interface for using ds9 from Python.
 
@@ -681,7 +680,7 @@ class ds9Viewer:
     '''
 
     _defName = 'PyVis'
-    ds9 = ds9Win(_defName)
+    ds9 = DS9Window(_defName)
     
     def __init__(self, name=_defName):
         pass
