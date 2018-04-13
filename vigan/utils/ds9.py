@@ -478,7 +478,7 @@ class ds9Win:
             application uses demon threads, else open files may keep those threads open unnecessarily.
             False by default because it can be slow (python bug 1663329).
     '''
-    def __init__(self, template=_DefTemplate, doOpen=True, doRaise=False, closeFDs=False):
+    def __init__(self, template=_DefTemplate, doOpen=False, doRaise=False, closeFDs=False):
         self.template = str(template)
         self.doRaise = bool(doRaise)
         self.closeFDs = bool(closeFDs)
