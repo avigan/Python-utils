@@ -9,7 +9,7 @@ from . import aperture
 
 def strehl(img, sampling, center=True, rebin=2,
            background_fit=True, background_fit_order=2, pixel_tf=True,
-           central_obscuration=0, disp=False):
+           central_obscuration=0, disp=False, ymin=1e-4):
     '''
     Compute Strehl ratio estimation from a PSF image
 
@@ -41,6 +41,9 @@ def strehl(img, sampling, center=True, rebin=2,
 
     disp : bool
         Display a summary plot. Default is False
+
+    ymin : float
+        Minimal y value in the summary plot. Default is 1e-4
 
     Returns
     -------
@@ -160,7 +163,7 @@ def strehl(img, sampling, center=True, rebin=2,
         plt.xlim(0, sampling / 2)
         plt.xlabel('Cutoff frequency')
 
-        plt.ylim(1e-4, 1)
+        plt.ylim(ymin, 1)
         plt.ylabel('OTF')
 
         plt.legend(loc='upper right')

@@ -7,7 +7,7 @@ from ..utils import imutils
 
 
 def focal_ratio(img, threshold=0.001, wave=None, pixel=None, center=True, rebin=2,
-                background_fit=True, background_fit_order=2, disp=False):
+                background_fit=True, background_fit_order=2, disp=False, ymin=1e-4):
     '''
     Compute Strehl ratio estimation from a PSF image
 
@@ -39,6 +39,9 @@ def focal_ratio(img, threshold=0.001, wave=None, pixel=None, center=True, rebin=
 
     disp : bool
         Display a summary plot. Default is False
+
+    ymin : float
+        Minimal y value in the summary plot. Default is 1e-4
 
     Returns
     -------
@@ -142,7 +145,7 @@ def focal_ratio(img, threshold=0.001, wave=None, pixel=None, center=True, rebin=
         plt.xlim(0, dim//2)
         plt.xlabel('Cutoff pixel')
 
-        plt.ylim(1e-4, 1)
+        plt.ylim(ymin, 1)
         plt.ylabel('OTF')        
         
         plt.legend(loc='upper right')
