@@ -125,7 +125,7 @@ def ten(dms):
   
     Parameters
     ----------    
-    dms : str, list, tuple
+    dms : str, list
         Value in sexagesimal notation (DMS).
 
     Returns
@@ -135,7 +135,7 @@ def ten(dms):
 
     '''
 
-    a = Angle(hms, unit=unit.deg)
+    a = Angle(dms, unit=unit.deg)
         
     return a.degree
 
@@ -167,7 +167,7 @@ def date(date, format='jd'):
 
     Parameters
     ----------    
-    date : str
+    date : str, array of str
        Date in format YYYY-MM-DD
 
     format : str
