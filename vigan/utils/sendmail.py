@@ -3,7 +3,7 @@ import smtplib
 from email.mime.text import MIMEText
 
 
-def send(to, subject, message, server='smtp.osupytheas.fr', port=25, sender='arthur.vigan@lam.fr'):
+def sendmail(to, subject, message, server='smtp.osupytheas.fr', port=25, sender='arthur.vigan@lam.fr'):
     # create message and configure
     msg = MIMEText(message)
     msg['Subject'] = subject
