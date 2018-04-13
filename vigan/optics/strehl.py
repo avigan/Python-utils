@@ -115,7 +115,7 @@ def strehl(img, sampling, center=True, rebin=2,
 
     # frequencies larger than D/lambda are set to zero
     rt = (dim - 1) / sampling * 2
-    mask = aper.disc(dim, int(rt//2), diameter=False, cpix=True)
+    mask = aperture.disc(dim, int(rt//2), diameter=False, cpix=True)
 
     # divide by pixel transfer function to account for spatial frequencies
     # over one pixel
@@ -126,7 +126,7 @@ def strehl(img, sampling, center=True, rebin=2,
 
     # ideal pupil
     rr = np.ceil(dim / (sampling))
-    pupil = aper.disc_obstructed(dim, int(rr), central_obscuration, diameter=True)
+    pupil = aperture.disc_obstructed(dim, int(rr), central_obscuration, diameter=True)
 
     # pupil autocorrelation
     otf_pupil = fft.fftshift(fft.fft2(np.abs(fft.ifft2(pupil))**2).real)
