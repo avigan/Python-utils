@@ -161,36 +161,32 @@ def sixty(deg):
     return a.dms.d, a.dms.m, a.dms.s
 
 
-def date(dates, format='jd'):
+def date(date, format='jd'):
     '''
     Convert dates with format YYYY-MM-DD
 
     Parameters
     ----------    
-    dates : str
-        List of dates in format YYYY-MM-DD
+    date : str
+       Date in format YYYY-MM-DD
 
     format : str
-        Format for the new dates; default is 'jd'. Possibilities are: jd, mjd, iso, yr
+        Format for the new date; default is 'jd'. Possibilities are: jd, mjd, iso, yr
 
     Returns
     -------
-    
+    ndates :
     '''
 
     format = format.lower()
-    
-    ndates = []
-    for date in dates:
-        time = Time(date)
-        
-        if format == 'jd':
-            ndates.append(time.jd)
-        elif format == 'mjd':
-            ndates.append(time.mjd)
-        elif format == 'iso':
-            ndates.append(time.isot)
-        elif format == 'yr':
-            ndates.append(time.jyear)
 
-    return np.array(ndates)
+    time = Time(date)
+    
+    if format == 'jd':
+        return time.jd
+    elif format == 'mjd':
+        return time.mjd
+    elif format == 'iso':
+        return time.isot
+    elif format == 'yr':
+        return time.jyear
