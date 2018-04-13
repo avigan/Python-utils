@@ -210,6 +210,10 @@ def _findDS9AndXPA():
 
         # look for ds9 and xpa inside of "ds9.app" or "SAOImage DS9.app"
         # in the standard application locations
+        # ds9Dir = _findApp('ds9', [
+        #     'SAOImage DS9.app/Contents/MacOS',
+        #     'SAOImageDS9.app/Contents/MacOS',
+        # ], doRaise=False)
         ds9Dir = _findApp('ds9', doRaise=False)
         
         foundDS9 = (ds9Dir is not None)
