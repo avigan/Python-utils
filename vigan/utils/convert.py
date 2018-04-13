@@ -1,5 +1,6 @@
 import numpy as np
 import astropy.units as unit
+import collections
 
 from astropy.coordinates import Angle
 from astropy.time import Time
@@ -11,7 +12,6 @@ def cart2pol(dx, dy, dx_err=0, dy_err=0, radec=True):
 
     Parameters
     ----------
-
     dx : float
         Position delta in x
 
@@ -29,7 +29,6 @@ def cart2pol(dx, dy, dx_err=0, dy_err=0, radec=True):
     
     Returns
     -------
-
     sep : float
         Separation
 
@@ -62,7 +61,6 @@ def pol2cart(sep, pa, sep_err=0, pa_err=0, radec=True):
 
     Parameters
     ----------
-
     sep : float
         Separation
 
@@ -80,7 +78,6 @@ def pol2cart(sep, pa, sep_err=0, pa_err=0, radec=True):
     
     Returns
     -------
-
     dx : float
         Position delta in x
 
@@ -111,26 +108,35 @@ def pol2cart(sep, pa, sep_err=0, pa_err=0, radec=True):
         
     
 
-def ten(hms):
+def ten(dms):
     '''
     Convert from sexagesimal to decimal degrees
 
+    Accepted formats are the same as astropy.Angle, e.g.:
+      - Angle('1:2:30.43 degrees')
+      - Angle('1 2 0 hours')
+      - Angle('1°2′3″')
+      - Angle('1d2m3.4s')
+      - Angle('-1h2m3s')
+      - Angle('-1h2.5m')
+      - Angle('-1:2.5', unit=u.deg)
+      - Angle((10, 11, 12), unit='hourangle')  # (h, m, s)
+      - Angle((-1, 2, 3), unit=u.deg)  # (d, m, s)
+  
     Parameters
-    ----------
-    
+    ----------    
     dms : str, list, tuple
-        Value in sexagesimal notation (HMS)
+        Value in sexagesimal notation (DMS).
 
     Returns
-    -------
-    
+    -------    
     deg : float
         Value in decimal degrees
 
     '''
-    
+
     a = Angle(hms, unit=unit.deg)
-    
+        
     return a.degree
 
 
@@ -139,14 +145,12 @@ def sixty(deg):
     Convert from decimal degrees to sexagesimal
 
     Parameters
-    ----------
-    
+    ----------    
     deg : float
         Value in decimal degrees
 
     Returns
-    -------
-    
+    -------    
     dms : float
         Value in sexagesimal degrees (DMS)
     
@@ -162,8 +166,7 @@ def date(dates, format='jd'):
     Convert dates with format YYYY-MM-DD
 
     Parameters
-    ----------
-    
+    ----------    
     dates : str
         List of dates in format YYYY-MM-DD
 
