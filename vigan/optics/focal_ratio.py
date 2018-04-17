@@ -109,7 +109,7 @@ def focal_ratio(img, threshold=0.001, wave=None, pixel=None, center=True, rebin=
     
     # first value of OTF below threshold
     otf_corr_1d, r = imutils.profile(otf_corr, type='mean', step=1, rmax=dim//2-1)
-    rmax = r[otf_corr_1d < threshold].min()
+    rmax = r[otf_corr_1d >= threshold].max()
 
     sampling = dim/rmax
     fratio   = None
@@ -130,8 +130,8 @@ def focal_ratio(img, threshold=0.001, wave=None, pixel=None, center=True, rebin=
         plt.semilogy(r_otf, otf_1d, lw=2, label='OTF')
         plt.semilogy(r_otf, otf_corr_1d, lw=2, linestyle='--', label='OTF (corrected)')
 
-        plt.axhline(threshold, linestyle='--', color='r', lw=2)
-        plt.axvline(rmax, linestyle='--', color='r', lw=2)
+        plt.axhline(threshold, linestyle='--', color='r', lw=1)
+        plt.axvline(rmax, linestyle='--', color='r', lw=1)
 
         plt.text(0.4, 0.95, 'sampling = {:.2f} pix / ($\lambda/D$)'.format(sampling),
                  transform=plt.gca().transAxes,
