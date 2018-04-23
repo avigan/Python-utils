@@ -2,6 +2,9 @@ import numpy as np
 import astropy.units as unit
 import collections
 
+import astropy.units as unt
+import astropy.constants as cst
+
 from astropy.coordinates import Angle
 from astropy.time import Time
 
@@ -190,3 +193,52 @@ def date(date, format='jd'):
         return time.isot
     elif format == 'yr':
         return time.jyear
+
+
+def stellar_parameters(radius=None, mass=None, logg=None):
+    '''
+    Determine one of the missing radius/mass/logg parameters from the
+    two others
+
+    Parameters
+    ----------
+    radius : float
+        Stellar radius, in Rsun
+
+    mass : float
+        Stellar mass, in Msun
+
+    logg : float
+        log of surface gravity, in dex cgs
+    '''
+
+    # init
+    r = radius
+    m = mass
+    l = logg
+
+    # radius determination
+    if (radius is None) and (mass is not None) and (logg is not None):
+        m = m * cst.M_sun
+        g = 10**(l) * unt.cm / unt.s**2
+        r = np.sqrt(cst.G * m / g).to(unt.m)
+
+    # mass determination
+    if (radius is not None) and (mass is None) and (logg is not None):
+        r = r * cst.R_sun
+        g = 10**(l) * unt.cm / unt.s**2
+        m = (g * r**2 / cst.G).to(unt.kg)
+
+    # logg determination
+    if (radius is not None) and (mass is not None) and (logg is None):
+        r = r * cst.R_sun
+        m = m * cst.M_sun
+        g = (cst.G * m / r**2).to(unt.cm / unt.s**2)
+        l = np.log10(g.value)
+
+    if (r is not None) and (m is not None) and (l is not None):
+        print('Radius = {:.2f} Rsun'.format((r / cst.R_sun).value))
+        print('Mass   = {:.2f} Msun'.format((m / cst.M_sun).value))
+        print('log(g) = {:.2f} dex cgs'.format(l))
+    else:
+        print('Warning: you need to provide at least 2 parameters of radius/mass/logg')
