@@ -242,3 +242,51 @@ def stellar_parameters(radius=None, mass=None, logg=None):
         print('log(g) = {:.2f} dex cgs'.format(l))
     else:
         print('Warning: you need to provide at least 2 parameters of radius/mass/logg')
+
+        
+def magnitude(mag=None, absmag=None, distance=None, parallax=None):
+    '''
+    Magnitude/absolute magnitude conversion
+
+    Parameters
+    ----------
+    mag : float
+        Magnitude of object
+
+    absmag : float
+        Absolute magnitude of object
+
+    distance : float
+        Distance in pc
+
+    parallax : float
+        Parallax in mas
+    '''
+
+    # distance
+    if (distance is not None) and (parallax is None):
+        d = distance
+        p = 1000 / d
+    elif (distance is None) and (parallax is not None):
+        p = parallax
+        d = 1000 / p
+    else:
+        print('Warning: you must provide either distance or parallax')
+        return
+    
+    # magnitude
+    if (mag is not None) and (absmag is None):
+        m = mag
+        M = m - 5*(np.log10(d) - 1)
+    elif (mag is None) and (absmag is not None):
+        M = absmag
+        m = M + 5*(np.log10(d) - 1)
+    else:
+        print('Warning: you must provide either mag or absmag')
+        return
+
+    print('distance = {:.2f} pc'.format(d))
+    print('parallax = {:.2f} mas'.format(d))
+    print('mag      = {:.2f}'.format(m))
+    print('abs_mag  = {:.2f}'.format(m))
+
