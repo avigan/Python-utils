@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def geometry(n_ring, radius, gap=0, inner_gap=False, orient=0, center=(0, 0)):
@@ -512,3 +513,50 @@ def geometry(n_ring, radius, gap=0, inner_gap=False, orient=0, center=(0, 0)):
             system[s, segments[s].b[4]] = -1
 
     return segments, system
+
+
+def plot(segments, margin=0.05):
+    '''
+    Plot segments created by the geometry() function
+
+    Parameters
+    ----------
+    segments : rec array
+        Segments information
+
+    margin : float 
+        Margin around the external border of the mirror, in fraction
+        of the total with of the pupil (approximately). Default is 
+        0.05 (5%).
+    '''
+
+    nring = np.max(segments.ring)
+    nseg  = len(segments)
+    
+    cmin = np.min(segments.center_node, axis=(0, 1))
+    cmax = np.max(segments.center_node, axis=(0, 1))
+    ext  = margin*np.max(cmax - cmin)
+    
+    plt.figure('Segments', figsize=(10, 10))
+    plt.clf()
+
+    for s in range(nseg):
+        plt.text(segments[s].center[0], segments[s].center[1], segments[s].num,
+                 color='r', ha='center',
+                 va='center', weight='bold', size='xx-large')
+
+        cx = segments.center_node[s, :, 0]
+        cy = segments.center_node[s, :, 1]
+        plt.plot(np.append(cx, cx[0]), np.append(cy, cy[0]), color='r')
+
+    for b in range(6):
+        cx = segments.center_border[:, b, 0]
+        cy = segments.center_border[:, b, 1]
+        plt.plot(cx, cy, linestyle='none', marker='o', color='r')
+
+    plt.xlim(cmin[0]-ext, cmax[0]+ext)
+    plt.ylim(cmin[1]-ext, cmax[1]+ext)
+
+    plt.title(r'$N_{{ring}}$={:d} - $N_{{seg}}$={:d}'.format(nring, nseg))
+    
+    plt.tight_layout()
