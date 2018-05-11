@@ -454,7 +454,7 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     delay_days = jd-jd[0]
     
     # Earth motion
-    days = np.arange(jd[0]-delay_days.max(), jd[0]+delay_days.max()*2)
+    days = np.arange(jd[0]-2*delay_days.max(), jd[0]+delay_days.max()*2)
     ndays = days.size
     x_earth, y_earth, z_earth = earth_coord(days)
     day_min = np.min(np.where(days >= jd[0])[0])
@@ -629,7 +629,7 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
                         mew=0, ms=ms, mec=col, color='w', ecolor=col0, elinewidth=width, capsize=0, zorder=-1)
             ax.errorbar(dra[0] - dra_bkg_track[day_min+idx[e]], ddec[0] - ddec_bkg_track[day_min+idx[e]], linestyle='none',
                         marker='o', mew=width, ms=ms, mec=col1, color='none',
-                        ecolor=col, elinewidth=width, capsize=0, zorder=+1, label=dates[e]+' (if background)')
+                        ecolor=col, elinewidth=width, capsize=0, zorder=+1)
                 
     if legend_loc is not None:
         ax.legend(loc=legend_loc)
@@ -772,4 +772,4 @@ if __name__ == '__main__':
         'pm_bkg_err': [0, 0]
     }
     
-    plots(target, dates, dra, dra_err, ddec, ddec_err, prop)
+    plots(target, dates, dra, dra_err, ddec, ddec_err, prop, legend_loc='upper left')
