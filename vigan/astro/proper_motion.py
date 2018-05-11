@@ -307,7 +307,8 @@ def track(dates, target_info):
 
 
 def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, legend_loc=None, filename=''):
-    '''Proper motion plot for a given target and candidate astrometry
+    '''
+    Proper motion plot for a given target and candidate astrometry
 
     The target_info parameter is a dictionary with the target
     properties. Mandatory fields are:
@@ -322,15 +323,19 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
       - dist_err or plx_err: distance or parallax error
       - pm_err: proper motions errors
     
-    Optionaly, the user can specify the expected distribution of
+    Optionally, the user can specify the expected distribution of
     proper motion for background objects based on galactic population
     models (e.g. Galaxia):
+
       - pm_bkg: mean proper motion for background stars
       - pm_bkg_err: error on the mean proper motion for background stars
 
+    When these parameters are provided, the proper motion curves
+    taking into account the motion of the background stars are
+    overplotted in grey on top of the usual curves.
+
     Parameters
     ----------
-
     target : str
         Target or candidate name
 
@@ -354,7 +359,6 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     filename : str
         Path and file name where to save the plot. The plot is saved only
         if a file name is provided.
-
     '''
 
     #######################################
@@ -556,7 +560,7 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     #
     zoom = 1.8
     color_nom = 'k'
-    color_bkg = '#777777'
+    color_bkg = (0.5, 0.5, 0.5)
     color_dat = ['black', 'red', 'teal', 'orange', 'forestgreen', 'purple', 'coral', 'navy', 'gold']
     width = 2
     ms    = 8
@@ -764,7 +768,7 @@ if __name__ == '__main__':
         'plx_err': 5.2,
         'pm': [-2.10, -40.2],
         'pm_err': [1.5, 1.5],
-        'pm_bkg': [-2, -30],
+        'pm_bkg': [-20, -30],
         'pm_bkg_err': [0, 0]
     }
     
