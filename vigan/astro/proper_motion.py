@@ -769,7 +769,7 @@ if __name__ == '__main__':
         'pm': [-2.10, -40.2],
         'pm_err': [1.5, 1.5],
         'pm_bkg': [-20, -30],
-        'pm_bkg_err': [0, 0]
+        'pm_bkg_err': [6.5, 5.8]
     }
     
-    plots(target, dates, dra, dra_err, ddec, ddec_err, prop, legend_loc='upper left')
+    plots(target, dates, dra, dra_err, ddec, ddec_err, prop)
