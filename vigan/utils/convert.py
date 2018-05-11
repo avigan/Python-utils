@@ -44,6 +44,12 @@ def cart2pol(dx, dy, dx_err=0, dy_err=0, radec=True):
     pa_err : float
         Error on position angle, in degrees
     '''
+
+    dx = np.array(dx)
+    dy = np.array(dx)
+    
+    dx_err = np.array(dx_err)
+    dy_err = np.array(dx_err)
     
     sep = np.sqrt(dx**2 + dy**2)
     if radec:
@@ -94,6 +100,12 @@ def pol2cart(sep, pa, sep_err=0, pa_err=0, radec=True):
         Error on position delta in y
     '''
 
+    sep = np.array(sep)
+    pa  = np.array(pa)
+
+    sep_err = np.array(sep_err)
+    pa_err  = np.array(pa_err)
+    
     pa = np.deg2rad(pa)
     pa_err = np.deg2rad(pa_err)
     
