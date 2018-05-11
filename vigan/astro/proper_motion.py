@@ -3,6 +3,7 @@ import os.path as path
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import matplotlib.colors as colors
 import astropy.units as unit
 
 from astropy.time import Time
@@ -306,8 +307,7 @@ def track(dates, target_info):
 
 
 def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, legend_loc=None, filename=''):
-    '''
-    Proper motion plot for a given target and candidate astrometry
+    '''Proper motion plot for a given target and candidate astrometry
 
     The target_info parameter is a dictionary with the target
     properties. Mandatory fields are:
@@ -322,6 +322,12 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
       - dist_err or plx_err: distance or parallax error
       - pm_err: proper motions errors
     
+    Optionaly, the user can specify the expected distribution of
+    proper motion for background objects based on galactic population
+    models (e.g. Galaxia):
+      - pm_bkg: mean proper motion for background stars
+      - pm_bkg_err: error on the mean proper motion for background stars
+
     Parameters
     ----------
 
@@ -384,6 +390,12 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     if np.logical_not(np.isfinite(pm_err[1])):
         pm_err[1] = 0
         miss_pm = True
+
+    # proper motion for background objects
+    pm_bkg = target_info.get('pm_bkg', None)
+    pm_bkg_err = target_info.get('pm_bkg_err', None)
+    if (pm_bkg is not None) and (pm_bkg_err is None):
+        pm_bkg_err = [0, 0]
 
     # distance
     miss_dist = False
@@ -466,6 +478,19 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
 
     dra_track -= dra_track[day_min]
     ddec_track -= ddec_track[day_min]
+
+    # motion of the primary, taking into account motion of background objects
+    if pm_bkg is not None:
+        pm_bkg_ra  = pm[0] - pm_bkg[0]
+        pm_bkg_dec = pm[1] - pm_bkg[1]
+        pm_bkg_ra_err  = np.sqrt(pm_ra_err**2 + pm_bkg_err[0]**2)
+        pm_bkg_dec_err = np.sqrt(pm_dec_err**2 + pm_bkg_err[1]**2)
+
+        dra_bkg_track = 0 + pm_bkg_ra*time + plx * ( d*x_earth - c*y_earth - d*x_earth[day_min] + c*y_earth[day_min])
+        ddec_bkg_track = 0 + pm_bkg_dec*time + plx * ( dp*x_earth - cp*y_earth - dp*x_earth[day_min] + cp*y_earth[day_min])
+
+        dra_bkg_track -= dra_bkg_track[day_min]
+        ddec_bkg_track -= ddec_bkg_track[day_min]
     
     # error propagation
     if (use_plx is True):
@@ -475,6 +500,14 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
                                 plx_err**2*((d*x_earth - c*y_earth) - (d*x_earth[day_min] - c*y_earth[day_min]))**2)
         ddec_track_err = np.sqrt(ddec_err[0]**2 + (pm_dec_err*delta)**2 +
                                  plx_err**2*((dp*x_earth - cp*y_earth) - (dp*x_earth[day_min] - cp*y_earth[day_min]))**2)
+        
+        # error on the motion of the primary, taking into account motion of background objects
+        if pm_bkg is not None:
+            dra_bkg_track_err = np.sqrt(dra_err[0]**2 + (pm_bkg_ra_err*delta)**2 +
+                                        plx_err**2*((d*x_earth - c*y_earth) - (d*x_earth[day_min] - c*y_earth[day_min]))**2)
+            ddec_bkg_track_err = np.sqrt(ddec_err[0]**2 + (pm_bkg_dec_err*delta)**2 +
+                                         plx_err**2*((dp*x_earth - cp*y_earth) - (dp*x_earth[day_min] - cp*y_earth[day_min]))**2)
+            
     else:
         delta = time-time[day_min]
 
@@ -493,19 +526,38 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
         dra_track_err = np.sqrt(dra_err[0]**2 + (pm_ra_err*delta)**2 + dra_dist_err**2)
         ddec_track_err = np.sqrt(ddec_err[0]**2 + (pm_dec_err*delta)**2 + ddec_dist_err**2)
 
-    
+        # error on the motion of the primary, taking into account motion of background objects
+        if pm_bkg is not None:
+            dra_track_p1 = 0 + pm_bkg_ra*delta + p1 * ( d*x_earth - c*y_earth - d*x_earth[day_min] + c*y_earth[day_min])
+            ddec_track_p1 = 0 + pm_bkg_dec*delta + p1 * ( dp*x_earth - cp*y_earth - dp*x_earth[day_min] + cp*y_earth[day_min])
+
+            dra_track_p2 = 0 + pm_bkg_ra*delta + p2 * ( d*x_earth - c*y_earth - d*x_earth[day_min] + c*y_earth[day_min])
+            ddec_track_p2 = 0 + pm_bkg_dec*delta + p2 * ( dp*x_earth - cp*y_earth - dp*x_earth[day_min] + cp*y_earth[day_min])
+
+            dra_dist_err = np.maximum(np.abs(dra_track-dra_track_p1), np.abs(dra_track-dra_track_p2))
+            ddec_dist_err = np.maximum(np.abs(ddec_track-ddec_track_p1), np.abs(ddec_track-ddec_track_p2))
+
+            dra_bkg_track_err = np.sqrt(dra_err[0]**2 + (pm_bkg_ra_err*delta)**2 + dra_dist_err**2)
+            ddec_bkg_track_err = np.sqrt(ddec_err[0]**2 + (pm_bkg_dec_err*delta)**2 + ddec_dist_err**2)
     
     # convert data to polar coordinates
     sep, pa, sep_err, pa_err = cart2pol(dra, ddec, dra_err, ddec_err, radec=True)
     
     sep_track, pa_track, sep_track_err, pa_track_err = cart2pol(dra[0]-dra_track, ddec[0]-ddec_track,
                                                                 dra_track_err, ddec_track_err, radec=True)
+
+    if pm_bkg is not None:
+        sep_bkg_track, pa_bkg_track, \
+            sep_bkg_track_err, pa_bkg_track_err = cart2pol(dra[0]-dra_bkg_track, ddec[0]-ddec_bkg_track,
+                                                           dra_bkg_track_err, ddec_bkg_track_err, radec=True)
     
     ###########################################
     # plots
     #
     zoom = 1.8
-    colors = ['black', 'red', 'teal', 'orange', 'forestgreen', 'purple', 'coral', 'navy', 'gold']
+    color_nom = 'k'
+    color_bkg = '#777777'
+    color_dat = ['black', 'red', 'teal', 'orange', 'forestgreen', 'purple', 'coral', 'navy', 'gold']
     width = 2
     ms    = 8
 
@@ -536,12 +588,12 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     ax = plt.subplot(gs[:, 0])
     ax.clear()
     
-    ax.plot(dra[0] - dra_track, ddec[0] - ddec_track, linestyle='dotted', color='k', zorder=0)
-    ax.plot(dra[0] - dra_track[day_min:day_max], ddec[0] - ddec_track[day_min:day_max], linestyle='-', color='k', zorder=0)
-        
-    for e in range(0, nepoch):
-        col = colors[e]
+    ax.plot(dra[0] - dra_track, ddec[0] - ddec_track, linestyle='dotted', color=color_nom, zorder=0)
+    ax.plot(dra[0] - dra_track[day_min:day_max], ddec[0] - ddec_track[day_min:day_max], linestyle='-', color=color_nom, zorder=0)
     
+    for e in range(0, nepoch):
+        col = colors.to_rgba(color_dat[e])
+
         ax.errorbar(dra[e], ddec[e], xerr=dra_err[e], yerr=ddec_err[e], linestyle='none', marker='o',
                     mew=width, ms=ms, mec=col, color=col, ecolor=col, elinewidth=width, capsize=0,
                     label=dates[e])
@@ -559,6 +611,22 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
                 ax.plot((dra[e], dra[0] - dra_track[day_min+idx[e]]), (ddec[e], ddec[0] - ddec_track[day_min+idx[e]]),
                         linestyle='-', color=col)
 
+    if pm_bkg is not None:
+        ax.plot(dra[0] - dra_bkg_track, ddec[0] - ddec_bkg_track, linestyle='dotted', color=color_bkg, zorder=0)
+        ax.plot(dra[0] - dra_bkg_track[day_min:day_max], ddec[0] - ddec_bkg_track[day_min:day_max],
+                linestyle='-', color=color_bkg, zorder=0)
+                
+        for e in range(1, nepoch):
+            col0 = colors.to_rgba(color_dat[e])
+            col1 = (col0[0], col0[1], col0[2], 0.5)
+            
+            ax.errorbar(dra[0] - dra_bkg_track[day_min+idx[e]], ddec[0] - ddec_bkg_track[day_min+idx[e]],
+                        xerr=dra_err[0], yerr=ddec_err[0], linestyle='none', marker='o', alpha=0.5,
+                        mew=0, ms=ms, mec=col, color='w', ecolor=col0, elinewidth=width, capsize=0, zorder=-1)
+            ax.errorbar(dra[0] - dra_bkg_track[day_min+idx[e]], ddec[0] - ddec_bkg_track[day_min+idx[e]], linestyle='none',
+                        marker='o', mew=width, ms=ms, mec=col1, color='none',
+                        ecolor=col, elinewidth=width, capsize=0, zorder=+1, label=dates[e]+' (if background)')
+                
     if legend_loc is not None:
         ax.legend(loc=legend_loc)
     
@@ -607,10 +675,16 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     ax_sep.fill_between(yr[0]+time-time[day_min], sep_track-sep_track_err, sep_track+sep_track_err,
                         linestyle='-', color='b', alpha=0.25)
     
-    ax_sep.plot(yr[0]+time-time[day_min], sep_track, linestyle='-', color='k')
+    ax_sep.plot(yr[0]+time-time[day_min], sep_track, linestyle='-', color=color_nom)
+
+    if pm_bkg is not None:
+        ax_sep.fill_between(yr[0]+time-time[day_min], sep_bkg_track-sep_bkg_track_err, sep_bkg_track+sep_bkg_track_err,
+                            linestyle='-', color=color_bkg, alpha=0.25)
+    
+        ax_sep.plot(yr[0]+time-time[day_min], sep_bkg_track, linestyle='-', color=color_bkg)
     
     for e in range(0, nepoch):
-        col = colors[e]
+        col = colors.to_rgba(color_dat[e])
     
         ax_sep.errorbar(yr[e], sep[e], yerr=sep_err[e], linestyle='none', marker='o',
                         mew=width, ms=ms, mec=col, color=col, ecolor=col, elinewidth=width, capsize=0)
@@ -639,10 +713,16 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     ax_pa.fill_between(yr[0]+time-time[day_min], pa_track-pa_track_err, pa_track+pa_track_err,
                        linestyle='-', color='b', alpha=0.25)
     
-    ax_pa.plot(yr[0]+time-time[day_min], pa_track, linestyle='-', color='k')
+    ax_pa.plot(yr[0]+time-time[day_min], pa_track, linestyle='-', color=color_nom)
+
+    if pm_bkg is not None:
+        ax_pa.fill_between(yr[0]+time-time[day_min], pa_bkg_track-pa_bkg_track_err, pa_bkg_track+pa_bkg_track_err,
+                           linestyle='-', color=color_bkg, alpha=0.25)
+    
+        ax_pa.plot(yr[0]+time-time[day_min], pa_bkg_track, linestyle='-', color=color_bkg)
     
     for e in range(0, nepoch):
-        col = colors[e]
+        col = colors.to_rgba(color_dat[e])
     
         ax_pa.errorbar(yr[e], pa[e], yerr=pa_err[e], linestyle='none', marker='o',
                        mew=width, ms=ms, mec=col, color=col, ecolor=col, elinewidth=width, capsize=0)
@@ -668,7 +748,7 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
 
 
 if __name__ == '__main__':
-    target   = 'HD_169142'
+    target   = 'HD_xxxxxx'
     dates    = ['2015-06-07', '2015-07-05', '2016-04-21']
     dra      = [635, 644, 633]
     dra_err  = [1, 6, 4]
@@ -683,7 +763,9 @@ if __name__ == '__main__':
         'plx': 1000/145,
         'plx_err': 5.2,
         'pm': [-2.10, -40.2],
-        'pm_err': [1.5, 1.5]
+        'pm_err': [1.5, 1.5],
+        'pm_bkg': [-2, -30],
+        'pm_bkg_err': [0, 0]
     }
     
     plots(target, dates, dra, dra_err, ddec, ddec_err, prop)
