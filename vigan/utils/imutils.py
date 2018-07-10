@@ -414,6 +414,8 @@ def rotate(array, value, center=None, method='interp', mode='constant', cval=0):
     '''
 
     method = method.lower()
+
+    array = array.copy()
     
     # array dimensions
     Ndim = array.ndim
