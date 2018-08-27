@@ -2,7 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def geometry(n_ring, radius, gap=0, inner_gap=False, orient=0, center=(0, 0)):
+def geometry(n_ring, radius, gap=0, inner_gap=False, orient=0, center=(0, 0),
+             missing=[]):
     '''Creates the hexagonal geometry of an segmented telescope given a
     number of rings and the radius of a segment
  
@@ -29,6 +30,9 @@ def geometry(n_ring, radius, gap=0, inner_gap=False, orient=0, center=(0, 0)):
     center : tuple
         Center of the central segment, in arbitrary units. Default is
         (0, 0)
+
+    missing : list
+        List of missing segment numbers
 
     Returns
     -------
@@ -181,6 +185,10 @@ def geometry(n_ring, radius, gap=0, inner_gap=False, orient=0, center=(0, 0)):
     segments[0].s      = np.arange(6)+1
     segments[0].b      = np.arange(6)
     segments[0].center = center
+
+    # missing segments
+    for m in missing:
+        segments[m].missing = True
     
     # some constants
     fact = np.sqrt(3)
@@ -498,19 +506,36 @@ def geometry(n_ring, radius, gap=0, inner_gap=False, orient=0, center=(0, 0)):
     # matrix of the system
     system = np.zeros((n_segment, n_border))
     for s in range(n_segment):
-        if segments[s].b[3] < n_border:
+        if (segments[s].missing):
+            continue
+        
+        if (segments[s].b[3] < n_border) and (not segments[segments[s].s[3]].missing):
             system[s, segments[s].b[3]] = 1
-        if segments[s].b[2] < n_border:
+        if (segments[s].b[2] < n_border) and (not segments[segments[s].s[2]].missing):
             system[s, segments[s].b[2]] = 1
-        if segments[s].b[1] < n_border:
+        if (segments[s].b[1] < n_border) and (not segments[segments[s].s[1]].missing):
             system[s, segments[s].b[1]] = 1
     
-        if segments[s].b[0] < n_border:
+        if (segments[s].b[0] < n_border) and (not segments[segments[s].s[0]].missing):
             system[s, segments[s].b[0]] = -1
-        if segments[s].b[5] < n_border:
+        if (segments[s].b[5] < n_border) and (not segments[segments[s].s[5]].missing):
             system[s, segments[s].b[5]] = -1
-        if segments[s].b[4] < n_border:
+        if (segments[s].b[4] < n_border) and (not segments[segments[s].s[4]].missing):
             system[s, segments[s].b[4]] = -1
+    # for s in range(n_segment):
+    #     if segments[s].b[3] < n_border:
+    #         system[s, segments[s].b[3]] = 1
+    #     if segments[s].b[2] < n_border:
+    #         system[s, segments[s].b[2]] = 1
+    #     if segments[s].b[1] < n_border:
+    #         system[s, segments[s].b[1]] = 1
+    
+    #     if segments[s].b[0] < n_border:
+    #         system[s, segments[s].b[0]] = -1
+    #     if segments[s].b[5] < n_border:
+    #         system[s, segments[s].b[5]] = -1
+    #     if segments[s].b[4] < n_border:
+    #         system[s, segments[s].b[4]] = -1
 
     return segments, system
 
