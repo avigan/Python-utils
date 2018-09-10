@@ -46,12 +46,12 @@ def cart2pol(dx, dy, dx_err=0, dy_err=0, radec=True):
     '''
 
     dx = np.array(dx)
-    dy = np.array(dx)
+    dy = np.array(dy)
     
     dx_err = np.array(dx_err)
-    dy_err = np.array(dx_err)
+    dy_err = np.array(dy_err)
     
-    sep = np.sqrt(dx**2 + dy**2)
+    sep = np.sqrt(dx**2 + dy**2)    
     if radec:
         pa  = np.mod(np.rad2deg(np.arctan2(dy, -dx)) + 270, 360)
     else:
@@ -59,7 +59,6 @@ def cart2pol(dx, dy, dx_err=0, dy_err=0, radec=True):
 
     sep_err = np.sqrt(dx**2 * dx_err**2 + dy**2 * dy_err**2) / sep
     pa_err  = np.rad2deg(np.sqrt(dy**2 * dx_err**2 + dx**2 * dy_err**2) / sep**2)
-
 
     return sep, pa, sep_err, pa_err
 
