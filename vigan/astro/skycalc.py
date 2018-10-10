@@ -4,7 +4,7 @@ from skycalc_cli import SkyCalc
 from astropy.io import fits
 
 
-def compute_sky_model(
+def sky_model(
         # observatory
         observatory='2640',
 
