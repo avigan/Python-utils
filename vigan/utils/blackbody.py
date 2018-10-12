@@ -1,5 +1,7 @@
 import numpy as np
 import astropy.constants as cst
+import astropy.units as u
+
 
 def blackbody(wave, T):
     '''
