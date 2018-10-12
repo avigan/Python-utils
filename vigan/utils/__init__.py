@@ -7,9 +7,10 @@ from . import prof
 
 from .sendmail import sendmail
 from .convert import *
+from .blackbody import *
 
 # ds9 module not supported in Windows
 try:
     from . import ds9
 except ImportError:
-    print('Warning: vigan.utils.ds9 is not available in Windows')
+    print('Warning: error occured while loading vigan.utils.ds9')
