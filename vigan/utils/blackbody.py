@@ -28,7 +28,8 @@ def blackbody(wave, T):
         T = T * u.K
 
     exp_part = np.exp(cst.h*cst.c/(wave*cst.k_B*T))
-    bb_spectrum = (2.*cst.h*cst.c**2/wave**5)*(exp_part - 1)**(-1) / u.sr
-    bb_spectrum = bb_spectrum.to('W/m2/micron/arcsec2')
+    bb_spectrum = (2*cst.h*cst.c**2/wave**5*1e10)*(exp_part - 1)**(-1) / u.sr
+    bb_spectrum = bb_spectrum.to('W/m2/micron/arcsec2')/1e10
+    # *1e10 is a trick to avoid rounding errors...
 
     return bb_spectrum
