@@ -159,8 +159,16 @@ def sky_model(
     }
     
     sky_model = SkyCalc.SkyModel()
+
+    # trick to set the right server
+    sky_model.server = 'http://etimecalret-001.eso.org'
+    sky_model.url = sky_model.server + '/observing/etc/api/skycalc'
+    sky_model.deleter_script_url = sky_model.server + '/observing/etc/api/rmtmp'
+
+    # update parameters
     sky_model.callwith(sky_dict)
 
+    # get data
     b = io.BytesIO(sky_model.getdata())
     data = fits.getdata(b)
 
