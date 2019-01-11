@@ -1221,6 +1221,34 @@ def profile(img, type='mean', step=1, mask=None, center=None, rmax=0, clip=True,
     return prof, rad
 
 
+####################################################################################
+#
+# FILTERING
+#
+####################################################################################
+
+def median(img, dim):
+    '''
+    Apply median filtering to an image 
+
+    Parameters
+    ----------
+    img : array
+        Image on which the profiles
+        
+    dim : int
+        Size of the median filter
+    
+    Returns
+    -------
+    img_filt : array
+        Median filtered image
+    '''
+    img_filt = img - ndimage.filters.median_filter(img, size=(dim, dim))
+    
+    return img_filt
+    
+
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
