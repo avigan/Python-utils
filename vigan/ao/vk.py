@@ -892,9 +892,7 @@ def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azim
     #
     # simulation parameters
     #
-    tabscale = 1                 # size of the simulated corrected phase screen in Dtel unit
-    ech      = 2                 # Sampling parameter (linear nb pixel in Airy FWHM)
-                                 # 2 = Shannon sampling
+    tabscale = 2  # size of the simulated corrected phase screen in Dtel unit
 
     #=================================================================
     #=================================================================
@@ -960,6 +958,7 @@ def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azim
         var_pho_wfs = 2*var_pho_wfs
 
     var_wfs = var_pho_wfs + var_ron_wfs
+    
     L       = tabscale*Dtel           # size of the simulated phase screen [m]
     dim     = tabscale*dim_pup        # size of the simulated phase screen [pixels]
 
@@ -1048,6 +1047,12 @@ if __name__ == '__main__':
     # stop
     #==================================================
 
+    # imports for example
+    import vigan.optics.aperture as aperture
+    import vigan.optics.mft as mft
+    import matplotlib.pyplot as plt
+    import matplotlib.colors as colors
+    
     #
     # creation of corrected phase screen
     #
@@ -1056,11 +1061,10 @@ if __name__ == '__main__':
                                  fit=True, servo=True, alias=True, noise=True, diff_refr=True,
                                  psd_only=False, seed=seed)
     
-    # reformating
-    import vigan.optics.aperture as aperture
-    
+    # reformating    
     dim = phs.shape[-1]
     pupil = aperture.disc_obstructed(dim_pup, dim_pup, 0.14, diameter=True, cpix=False)
+    phs = phs[..., dim_pup:2*dim_pup, dim_pup:2*dim_pup]
     phs[..., :, :] *= pupil
 
     # plot result
@@ -1072,4 +1076,3 @@ if __name__ == '__main__':
              weight='bold', fontsize='x-large', transform=plt.gca().transAxes)
     plt.colorbar(cim, label='Phase error [microns]')
     plt.tight_layout()
-
