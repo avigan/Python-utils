@@ -767,7 +767,7 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
                 chunks = np.append(chunks, rem)
                 nchunk += 1
 
-            phs = np.empty((n_screen, local_dim, local_dim))
+            phs = np.empty((n_screen, local_dim, local_dim), dtype=np.float32)
             for c in range(nchunk):
                 if nchunk > 1:
                     print(' * chunk {} / {}'.format(c+1, nchunk))
