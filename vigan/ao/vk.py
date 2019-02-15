@@ -892,7 +892,7 @@ def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azim
     #
     # simulation parameters
     #
-    tabscale = 2                 # size of the simulated corrected phase screen in Dtel unit
+    tabscale = 1                 # size of the simulated corrected phase screen in Dtel unit
     ech      = 2                 # Sampling parameter (linear nb pixel in Airy FWHM)
                                  # 2 = Shannon sampling
 
@@ -1061,7 +1061,6 @@ if __name__ == '__main__':
     
     dim = phs.shape[-1]
     pupil = aperture.disc_obstructed(dim_pup, dim_pup, 0.14, diameter=True, cpix=False)
-    phs = phs[..., (dim-dim_pup)//2:(dim+dim_pup)//2, (dim-dim_pup)//2:(dim+dim_pup)//2]
     phs[..., :, :] *= pupil
 
     # plot result
