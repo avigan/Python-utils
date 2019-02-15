@@ -752,16 +752,22 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
             print('Generating {} phase screen(s)'.format(n_screen))
             
             # random draw of Gaussian noise
-            tab = np.random.normal(loc=0, scale=1, size=(n_screen, local_dim, local_dim))
+            phs = np.random.normal(loc=0, scale=1, size=(n_screen, local_dim, local_dim))
 
             # switch to Fourier space
-            tab = fft.ifft2(tab)*local_dim*local_L
+            phs = fft.ifft2(phs, overwrite_x=True)
+            
+            # normalize
+            phs *= local_dim*local_L
 
             # multiply with PSD
-            phs = tab * np.sqrt(psd)
+            phs = phs * np.sqrt(psd)
 
             # switch back to direct space
-            phs = fft.fft2(phs) / local_L**2
+            phs = fft.fft2(phs, overwrite_x=True)
+            
+            # normalize
+            phs *= 1 / local_L**2
             
             if full:
                 phs = phs.real
