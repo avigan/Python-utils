@@ -804,7 +804,7 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
 
 
 def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azimuth,
-                           spat_filter=0.7, img_wave=1.593e-6, dim_pup=240, n_screen=1,
+                           spat_filter=0.7, img_wave=1.593e-6, dim_pup=240, n_screen=1, chunk_size=500,
                            fit=True, servo=True, alias=True, noise=True, diff_refr=True,
                            psd_only=False, seed=None):
     '''
@@ -852,6 +852,10 @@ def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azim
     n_screen : bool
         Number of phase screens to generate. Default is 1. This parameter
         is ignored if psd_only is True
+
+    chunk_size : int
+        Number of phase screens generated in parallel. Useful when a very 
+        large number of phase screens are requested. Default is 500
 
     fit : bool
         Include fitting error term. Default is True
@@ -1011,7 +1015,8 @@ def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azim
                                   zenith=zenith, azimuth=azimuth, aniso=aniso, 
                                   fit=fit, servo=servo, alias=alias, noise=noise,
                                   gain=gain1, coeff_alias=coeff_alias, diffr=diffr,
-                                  full=full, psd_only=psd_only, n_screen=n_screen)
+                                  full=full, psd_only=psd_only, n_screen=n_screen,
+                                  chunk_size=chunk_size)
 
     return res
 
