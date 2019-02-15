@@ -488,6 +488,7 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
                     pyr=False,
                     psd_only=False,
                     n_screen=1,
+                    chunk_size=500,
                     seed=None,
                     turb=False,
                     fit=True,
@@ -578,6 +579,10 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
     n_screen : bool
         Number of phase screens to generate. Default is 1. This parameter
         is ignored if psd_only is True
+
+    chunk_size : int
+        Number of phase screens generated in parallel. Useful when a very 
+        large number of phase screens are requested. Default is 500
 
     seed : int
         Seed for andom number generator. Default is None
@@ -750,33 +755,50 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
             # compute phase screens
             #
             print('Generating {} phase screen(s)'.format(n_screen))
+
+            # split in several chunks
+            nchunk = n_screen // chunk_size
+            rem    = n_screen % chunk_size
             
-            # random draw of Gaussian noise
-            print(' * random variable')
-            phs = np.random.normal(loc=0, scale=1, size=(n_screen, local_dim, local_dim))
+            chunks = np.array([], dtype=np.int)
+            if nchunk > 0:
+                chunks = np.append(chunks, np.full(nchunk, chunk_size))
+            if rem > 0:
+                chunks = np.append(chunks, rem)
+                nchunk += 1
 
-            # switch to Fourier space
-            print(' * switch to Fourier space')
-            phs = fft.ifft2(phs, overwrite_x=True)
+            phs = np.empty((n_screen, local_dim, local_dim))
+            for c in range(nchunk):
+                if nchunk > 1:
+                    print(' * chunk {} / {}'.format(c+1, nchunk))
+                
+                # size of current chunk
+                chunk = chunks[c]
+                idx   = np.sum(chunks[:c])
+                
+                # random draw of Gaussian noise
+                tab = np.random.normal(loc=0, scale=1, size=(chunk, local_dim, local_dim))
+                
+                # switch to Fourier space
+                tab = fft.ifft2(tab)
 
-            # normalize
-            phs *= local_dim*local_L
+                # normalize
+                tab *= local_dim*local_L
 
-            # multiply with PSD
-            print(' * AO PSD multiplication')
-            phs = phs * np.sqrt(psd)
+                # multiply with PSD
+                tab = tab * np.sqrt(psd)
 
-            # switch back to direct space
-            print(' * switch to direct space')
-            phs = fft.fft2(phs, overwrite_x=True).real
-            
-            # normalize
-            phs *= 1 / local_L**2
-            
+                # switch back to direct space
+                tab = fft.fft2(tab).real
+
+                # normalize
+                tab *= img_wave / (2*np.pi) / local_L**2
+
+                # save
+                phs[idx:idx+chunk, ...] = tab
+
             if not full:
-                phs = phs[0:fin_dim, 0:fin_dim].real
-
-            phs = phs * img_wave / (2*np.pi)
+                phs = phs[0:fin_dim, 0:fin_dim]
 
             return phs, var_ao
 
@@ -1018,7 +1040,7 @@ if __name__ == '__main__':
     #
     seed      = 123
     dim_pup   = 240
-    n_screen  = 1
+    n_screen  = 207
     
     #==================================================
     # fined-tunned parameters for 2018-04-04T00:40:00
