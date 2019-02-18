@@ -20,6 +20,7 @@ setup(
     install_requires=[
         'numpy', 'scipy', 'astropy', 'pandas', 'matplotlib'
     ],
+    include_package_data=True,
     package_data={
         'vigan': ['data/evolution/*'],
     },
