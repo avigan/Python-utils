@@ -11,25 +11,41 @@ import astropy.units as units
 import scipy.interpolate as interp
 
 from collections import deque
+from pathlib import Path 
 
 
-def read_model_BHAC2015(path):
+def read_model_BHAC2015(path, fname, instrument):
     '''
     Read the BHAC2015 models
 
     Parameters
     ----------
     path : str
-        Full path to the file containing the models
+        Full path to the directory containing the model files
+
+    fname : str
+        Full model file name
+
+    instrument : str
+        Name of the instrument (or observatory) for the file
 
     Returns
     -------
-    data : array_like
-        Pandas array with all the data. Age in Myr, mass in Mjup, Teff in K, logL in Lsun, radius in Rjup.
+    masses : vector
+        Numpy vector with unique masses
+
+    ages : vector
+        Numpy vector with unique ages
+
+    values : array
+        Array with names of parameters
+
+    data : array
+        Numpy data array
     '''
     
     # read general data
-    data = pd.read_csv(path, sep='\s+', header=None, comment='!')
+    data = pd.read_csv(path / fname, sep='\s+', header=None, comment='!')
 
     # add ages
     data.insert(0, 'age', 0)
@@ -43,7 +59,7 @@ def read_model_BHAC2015(path):
     ages = []
     cage = 0
 
-    file = open(path, 'r')
+    file = open(path / fname, 'r')
     for line in file:
         # skip non-comment lines
         if (line[0] != '!'):
@@ -74,22 +90,40 @@ def read_model_BHAC2015(path):
     data.mass   *= cst.M_sun / cst.M_jup
     data.radius *= cst.R_sun / cst.R_jup
     
-    return data
+    # reshape in final format
+    masses, ages, values, dat = reshape_data(data)
+
+    return masses, ages, values, dat
 
 
-def read_model_PHOENIX_websim(path):
+def read_model_PHOENIX_websim(path, fname, instrument):
     '''
     Read models from the PHOENIX web simulator
 
     Parameters
     ----------
-    Path : str
-        Full path to the file containing the models
+    path : str
+        Full path to the directory containing the model files
+
+    fname : str
+        Full model file name
+
+    instrument : str
+        Name of the instrument (or observatory) for the file
 
     Returns
     -------
-    data : array_like
-        Pandas array with all the data. Ages in Myr, mass in Mjup, Teff in K, logL in Lsun, radius in Rjup.
+    masses : vector
+        Numpy vector with unique masses
+
+    ages : vector
+        Numpy vector with unique ages
+
+    values : array
+        Array with names of parameters
+
+    data : array
+        Numpy data array
     '''
 
     # read column headers and number of values
@@ -104,7 +138,7 @@ def read_model_PHOENIX_websim(path):
     lines = []
     
     # get column names
-    file = open(path, 'r')
+    file = open(path / fname, 'r')
     for line in file:
         # age value
         m = p_ages.match(line)
@@ -156,26 +190,292 @@ def read_model_PHOENIX_websim(path):
     else:
         pass
         
-    return data
+    # reshape in final format
+    masses, ages, values, dat = reshape_data(data)
+        
+    return masses, ages, values, dat
 
 
+def read_model_sonora(path, fname, instrument):
+    '''
+    Read the SONORA models
 
+    Parameters
+    ----------
+    path : str
+        Full path to the directory containing the model files
+
+    fname : str
+        Full model file name
+
+    instrument : str
+        Name of the instrument (or observatory) for the file
+
+    Returns
+    -------
+    masses : vector
+        Numpy vector with unique masses
+
+    ages : vector
+        Numpy vector with unique ages
+
+    values : array
+        Array with names of parameters
+
+    data : array
+        Numpy data array
+    '''
+
+    # for SONORA, magnitudes are calculated for different observatories or instruments
+    observatory = instrument
+
+    ####################################################
+    # magnitudes
+    #
+
+    # read observatory and filter header
+    re_obs = re.compile('\s+\|')
+    file = open(path / fname, 'r')
+    for line in file:
+        m = re_obs.match(line)
+        if (m is not None):
+            break
+    obs  = line
+    filt = file.readline()
+    file.close()
+
+    # associate observatory and filters
+    obs_list  = []
+    filt_list = []
+    obs_all   = obs.split('|')
+    start = 0
+    for obs in obs_all:
+        sub_filt = filt[start:start+len(obs)]
+        start = start+len(obs)+1
+
+        obs_short = obs.strip().lower()
+        all_filt  = sub_filt.split()
+
+        if len(all_filt) != 0:
+            filt_list.extend(all_filt)
+            obs_list.extend([obs_short for i in range(len(all_filt))])
+
+    # read general data
+    data_mag = pd.read_csv(path / fname, sep='\s+', skiprows=11, header=None)
+    data_mag.columns = pd.MultiIndex.from_arrays((obs_list, filt_list))
+
+    Teff_mag = data_mag[('', 'Teff')].unique()
+    logg_mag = data_mag[('', 'log_g')].unique()
+
+    nTeff_mag = len(Teff_mag)
+    nlogg_mag = len(logg_mag)
+
+    ####################################################
+    # evolution
+    #
+    path_evol = path / 'sonora_evolution_files'
+    files = path_evol.glob('model_seq.*')
+    files = list(files)
+
+    # column names
+    names = ('idx', 't(years)', 'log L', 'R(cm)', 'Ts', 'Te', 'log rc',
+             'log Pc', 'log Tc', 'g', 'Uth', 'Ugrav', 'log Lnuc', 'I')
+
+    # add filters
+    sub = data_mag.loc[:, (observatory, slice(None))]
+    filters = np.array(sub.columns.get_level_values(1))
+
+    # values
+    values = ['Teff', 'logL', 'radius', 'logg']
+    values.extend(filters)
+    values = np.array(values)
+
+    # ages
+    ages = np.logspace(4, 10, 100)
+
+    # pseudo-masses
+    pmasses = []
+    for file in files:
+        mass = np.round(float('0{}'.format(file.suffix))*10000).astype(int)
+        pmasses.append(mass)
+    pmasses = sorted(pmasses)
+
+    # real masses in Mjup
+    re_mass = re.compile('\*\*\* MS=\s+([0-9]+\.[0-9]+) Mj')
+    masses = np.zeros(len(pmasses))
+    for idx, pmass in enumerate(pmasses):
+        fname = path_evol / 'model_seq.{:04}'.format(pmass)
+        file  = open(fname)
+        for line in file:
+            m = re_mass.match(line)
+            if (m is not None):
+                masses[idx] = float(m[1])
+                break
+        file.close()
+
+    # read all data
+    data = np.full((len(pmasses), len(ages), len(values)), np.nan)
+    for filt in filters:
+        print(' * {} - {}'.format(observatory, filt))
+        aTeff = data_mag[('', 'Teff')].values.reshape(nlogg_mag, nTeff_mag)
+        alogg = data_mag[('', 'log_g')].values.reshape(nlogg_mag, nTeff_mag)
+        amag  = data_mag[(observatory, filt)].values.reshape(nlogg_mag, nTeff_mag)
+        fint_mag = interp.Rbf(alogg, aTeff, amag, function='linear', smooth=0)
+    
+        Teff_min = aTeff.min()
+        Teff_max = aTeff.max()
+        logg_min = alogg.min()
+        logg_max = alogg.max()
+
+        for idx, pmass in enumerate(pmasses):
+            # print(' * {:6.4f} Msun'.format(pmass/10000))
+            fname = path_evol / 'model_seq.{:04}'.format(pmass)
+
+            # data
+            df = pd.read_csv(fname, sep='\s+', skiprows=13, header=None, index_col=0, names=names)
+            x = df['t(years)']
+
+            #
+            # bulk physical parameters
+            #
+
+            # Teff
+            y = df['Te']
+            fint  = interp.interp1d(x, y, bounds_error=False, fill_value=np.nan)    
+            data[idx, :, values == 'Teff'] = fint(ages)
+
+            # logL
+            y = df['log L']
+            fint  = interp.interp1d(x, y, bounds_error=False, fill_value=np.nan)    
+            data[idx, :, values == 'logL'] = fint(ages)
+
+            # logL
+            y = df['R(cm)']*units.cm / cst.R_jup.to(units.cm)
+            fint  = interp.interp1d(x, y, bounds_error=False, fill_value=np.nan)    
+            data[idx, :, values == 'radius'] = fint(ages)
+
+            # logg
+            y = np.log10(df['g'])
+            fint  = interp.interp1d(x, y, bounds_error=False, fill_value=np.nan)    
+            data[idx, :, values == 'logg'] = fint(ages)
+
+            #
+            # magnitudes
+            #
+            cTeff = data[idx, :, values == 'Teff'].squeeze()
+            clogg = data[idx, :, values == 'logg'].squeeze()
+            for i, (t, l) in enumerate(zip(cTeff, clogg)):
+                data[idx, i, values == filt] = fint_mag(l, t)
+            mask = (cTeff < Teff_min) | (cTeff > Teff_max) | (clogg < logg_min) | (clogg > logg_max)
+            data[idx, mask, values == filt] = np.nan
+            
+            # plot
+            # plt.figure(0, figsize=(18, 7))
+            # plt.clf()
+            # plt.subplot(121)            
+            # plt.pcolor(aTeff, alogg, amag)
+            # cs = plt.contour(aTeff, alogg, amag, colors='k', levels=np.arange(100))
+            # plt.clabel(cs, inline=False, fontsize='x-small', fmt='%.0f')
+            # plt.plot(cTeff, clogg, marker='+', color='r', linestyle='-')
+            # plt.xlabel('Teff [k]')
+            # # plt.xlim(aTeff.min(), aTeff.max())
+            # plt.ylabel('log(g) [dex cgs]')
+            # # plt.ylim(alogg.min(), alogg.max())
+            # plt.title('Mass = {} Msun'.format(pmass/1e4))
+
+            # plt.subplot(122)
+            # plt.semilogx(ages, data[idx, :, values == filt].squeeze(), marker='+')
+            # plt.xlabel('Age [Myr]')
+            # plt.ylabel('{} [mag]'.format(filt))
+            # plt.title('Mass = {} Msun'.format(pmass/1e4))
+            # plt.tight_layout()            
+
+    # converts ages in Myr
+    ages = ages / 1e6
+    
+    return masses, ages, values, data
+
+
+def read_model_bex(path, fname, instrument):
+    '''
+    Read the BEX models
+
+    Parameters
+    ----------
+    path : str
+        Full path to the directory containing the model files
+
+    fname : str
+        Full model file name
+
+    instrument : str
+        Name of the instrument (or observatory) for the file
+
+    Returns
+    -------
+    masses : vector
+        Numpy vector with unique masses
+
+    ages : vector
+        Numpy vector with unique ages
+
+    values : array
+        Array with names of parameters
+
+    data : array
+        Numpy data array
+    '''
+
+    df = pd.read_csv(path / fname, index_col=(0, 1))
+
+    masses  = np.sort(np.unique(df.index.get_level_values(0)))  # MJup
+    ages    = np.sort(np.unique(df.index.get_level_values(1)))  # yr
+    values  = df.columns
+
+    data = np.zeros((len(masses), len(ages), len(values)))
+    for iv, val in enumerate(values):
+        for im, mass in enumerate(masses):
+            tmp = df.loc[(mass, slice(None)), val]
+            data[im, :, iv] = tmp
+            
+    # converts ages in Myr
+    ages = ages / 1e6
+    
+    return masses, ages, values, data
+
+    
 #######################################
 # models definitions
 #
 models = {
-    'path': os.path.expanduser('/Users/avigan/Work/Models/Evolution/'),
+    'path': (Path(__file__) / '../data/evolution/').resolve(),
     'properties': [
-        {'instrument': 'nicmos', 'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.HST', 'function': read_model_PHOENIX_websim},
-        {'instrument': 'naco',   'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.NaCo', 'function': read_model_PHOENIX_websim},
-        {'instrument': 'irdis',  'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.SPHERE.Vega', 'function': read_model_PHOENIX_websim},
+        {'instrument': 'nicmos', 'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.HST',           'function': read_model_PHOENIX_websim},
+        {'instrument': 'naco',   'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.NaCo',          'function': read_model_PHOENIX_websim},
+        {'instrument': 'irdis',  'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.SPHERE.Vega',   'function': read_model_PHOENIX_websim},
     
-        {'instrument': 'nicmos', 'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.HST', 'function': read_model_PHOENIX_websim},
-        {'instrument': 'naco',   'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.NaCo', 'function': read_model_PHOENIX_websim},
-        {'instrument': 'irdis',  'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.SPHERE.Vega', 'function': read_model_PHOENIX_websim},
+        {'instrument': 'nicmos', 'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.HST',            'function': read_model_PHOENIX_websim},
+        {'instrument': 'naco',   'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.NaCo',           'function': read_model_PHOENIX_websim},
+        {'instrument': 'irdis',  'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.SPHERE.Vega',    'function': read_model_PHOENIX_websim},
     
         {'instrument': 'irdis',  'name': 'bhac2015+dusty2000', 'file': 'BHAC15_DUSTY00_iso_t10_10.SPHERE', 'function': read_model_BHAC2015},
-        {'instrument': 'irdis',  'name': 'bhac2015+cond2003',  'file': 'BHAC15_COND03_iso_t10_10.SPHERE', 'function': read_model_BHAC2015},
+        {'instrument': 'irdis',  'name': 'bhac2015+cond2003',  'file': 'BHAC15_COND03_iso_t10_10.SPHERE',  'function': read_model_BHAC2015},
+
+        {'instrument': 'mko',    'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': read_model_sonora},
+        {'instrument': '2mass',  'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': read_model_sonora},
+        {'instrument': 'keck',   'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': read_model_sonora},
+        {'instrument': 'sdss',   'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': read_model_sonora},
+        {'instrument': 'irac',   'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': read_model_sonora},
+        {'instrument': 'wise',   'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': read_model_sonora},
+        
+        {'instrument': 'irdis',  'name': 'bex_cond_coldest',  'file': 'bex_ames-cond_coldest.csv',  'function': read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_cond_warm',     'file': 'bex_ames-cond_warm.csv',     'function': read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_cond_hot',      'file': 'bex_ames-cond_hot.csv',      'function': read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_cond_hottest',  'file': 'bex_ames-cond_hottest.csv',  'function': read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_dusty_coldest', 'file': 'bex_ames-dusty_coldest.csv', 'function': read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_dusty_warm',    'file': 'bex_ames-dusty_warm.csv',    'function': read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_dusty_hot',     'file': 'bex_ames-dusty_hot.csv',     'function': read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_dusty_hottest', 'file': 'bex_ames-dusty_hottest.csv', 'function': read_model_bex}
     ],
     'data': {}
 }
@@ -193,17 +493,17 @@ def reshape_data(dataframe):
 
     Returns
     -------
-    data : array
-        Numpy data array
+    masses : vector
+        Numpy vector with unique masses
 
     ages : vector
         Numpy vector with unique ages
 
-    masses : vector
-        Numpy vector with unique masses
-
     values : array
         Array with names of parameters
+
+    data : array
+        Numpy data array
     '''
 
     # unique ages and masses
@@ -439,8 +739,7 @@ def mag_to_mass(age, distance, mag, Dmag, filt,
     # -------------------------------
     # get model data
     # -------------------------------
-    # df = read_model_data(instrument, model)
-    # masses, ages, values, data = reshape_data(df)
+    # masses, ages, values, data = read_model_data(instrument, model)
     masses, ages, values, data = model_data(instrument, model)
 
     # check ages
@@ -564,8 +863,7 @@ def model_data(instrument, model):
     if key not in models['data'].keys():
         print('Loading model {0} for {1}'.format(model, instrument))
         
-        df = read_model_data(instrument, model)
-        masses, ages, values, data = reshape_data(df)
+        masses, ages, values, data = read_model_data(instrument, model)
 
         models['data'][key] = (masses, ages, values, data)
 
@@ -598,12 +896,13 @@ def read_model_data(instrument, model):
     data = None
     for mod in models['properties']:
         if (mod['name'] == model) and (mod['instrument'] == instrument):
-            path = os.path.join(models['path'], mod['file'])
+            path  = models['path']
+            fname = mod['file']
 
-            if not os.path.exists(path):
+            if not path.exists():
                 raise ValueError('File {0} for model {1} and instrument {2} does not exists'.format(path, model, instrument))
             
-            data = mod['function'](path)
+            data = mod['function'](path, fname, instrument)
 
     # not found
     if data is None:
@@ -612,7 +911,7 @@ def read_model_data(instrument, model):
     return data
 
 
-def plot_model(instrument, model, param, ages=None, masses=None):
+def plot_model(instrument, model, param, age_list=None, mass_list=None):
     '''
     Plot parameter evolution as a function of age for a model and instrument
 
@@ -627,11 +926,11 @@ def plot_model(instrument, model, param, ages=None, masses=None):
     param : str
         Parameter of the model to be plotted
     
-    ages : array
+    age_list : array
         List of ages to use for the plots. Default is None, so it will 
         use all available ages
 
-    masses : array
+    mass_list : array
         List of masses to use for the plots. Default is None, so it will 
         use all available masses
 
@@ -641,17 +940,13 @@ def plot_model(instrument, model, param, ages=None, masses=None):
         The complete path to the model file
     '''
     
-    data = read_model_data(instrument, model)
+    masses, ages, values, data = model_data(instrument, model)
 
-    if masses:
-        masses = np.array(masses)
-    else:
-        masses = data.mass.unique()
-
-    if ages:
-        ages = np.array(ages)
-    else:
-        ages = data.age.unique()
+    if not mass_list:
+        mass_list = masses
+        
+    if not age_list:
+        age_list = ages
 
     cmap = cm.plasma
     norm = colors.LogNorm(vmin=ages.min(), vmax=ages.max())
@@ -663,9 +958,10 @@ def plot_model(instrument, model, param, ages=None, masses=None):
     plt.clf()
     ax = fig.add_subplot(111)
     
-    for mass in masses:
+    for mass in mass_list:
         if (mass <= 75):
-            ax.plot(data.loc[data.mass == mass, 'age'], data.loc[data.mass == mass, param], label=r'{0:.1f} MJup'.format(mass), color=cmap(mass/75.))
+            ax.plot(ages, data[masses == mass, :, values == param].squeeze(), 
+                    label=r'{0:.1f} MJup'.format(mass), color=cmap(mass/75.))
 
     ax.set_xscale('log')
     ax.set_yscale('linear')
@@ -686,8 +982,9 @@ def plot_model(instrument, model, param, ages=None, masses=None):
     plt.clf()
     ax = fig.add_subplot(111)
     
-    for age in ages:
-        ax.plot(data.loc[data.age == age, 'mass'], data.loc[data.age == age, param], label=r'{0:.0f} Myr'.format(age), color=cmap(norm(age)))
+    for age in age_list:
+        ax.plot(masses, data[:, ages == age, values == param].squeeze(), 
+                label=r'{0:.4f} Myr'.format(age), color=cmap(norm(age)))
 
     ax.set_xlim(0, 75)
         
@@ -699,7 +996,6 @@ def plot_model(instrument, model, param, ages=None, masses=None):
 
     ax.set_title('{0}, {1}'.format(model, instrument))
     
-    ax.legend(loc='upper right')
+    # ax.legend(loc='upper right')
     
     plt.tight_layout()
-
