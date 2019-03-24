@@ -900,7 +900,7 @@ def read_model_data(instrument, model):
             fname = mod['file']
 
             if not path.exists():
-                raise ValueError('File {0} for model {1} and instrument {2} does not exists'.format(path, model, instrument))
+                raise ValueError('File {0} for model {1} and instrument {2} does not exists. It can be either because the paths to the package are not configure properly or because you are trying to use a private set of models that are not distributed through the package (SONORA, BEX, ...).'.format(path, model, instrument))
             
             data = mod['function'](path, fname, instrument)
 
