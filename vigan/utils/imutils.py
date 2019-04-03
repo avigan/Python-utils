@@ -1084,7 +1084,7 @@ def fix_badpix(img, bpm, npix=8, weight=False):
 ####################################################################################
 
 
-def profile(img, type='mean', step=1, mask=None, center=None, rmax=0, clip=True, exact=False):
+def profile(img, ptype='mean', step=1, mask=None, center=None, rmax=0, clip=True, exact=False):
     '''
     Azimuthal statistics of an image
 
@@ -1121,6 +1121,9 @@ def profile(img, type='mean', step=1, mask=None, center=None, rmax=0, clip=True,
     rad : array
         Separation vector, in pixel
     '''
+    
+    # make sure we work on a copy
+    img = img.copy()
     
     # array dimensions
     dimx = img.shape[1]
@@ -1183,23 +1186,23 @@ def profile(img, type='mean', step=1, mask=None, center=None, rmax=0, clip=True,
     # calculate profile
     rad  = r_uniq_val[0:i_max]
 
-    type = type.lower()
+    ptype = ptype.lower()
     if step == 1:
         # fast statistics if step=1
-        if type == 'mean':
+        if ptype == 'mean':
             prof = np.nanmean(polar, axis=1)
-        elif type == 'std':
+        elif ptype == 'std':
             prof = np.nanstd(polar, axis=1, ddof=1)
-        elif type == 'var':
+        elif ptype == 'var':
             prof = np.nanvar(polar, axis=1)
-        elif type == 'median':
+        elif ptype == 'median':
             prof = np.nanmedian(polar, axis=1)
-        elif type == 'min':
+        elif ptype == 'min':
             prof = np.nanmin(polar, axis=1)
-        elif type == 'max':
+        elif ptype == 'max':
             prof = np.nanmax(polar, axis=1)
         else:
-            raise ValueError('Unknown statistics ptype = {0}. Allowed values are mean, std, var, median, min and max'.format(type))
+            raise ValueError('Unknown statistics ptype = {0}. Allowed values are mean, std, var, median, min and max'.format(ptype))
     else:
         # slower if we need step > 1
         prof = np.zeros(i_max, dtype=img.dtype)
@@ -1207,20 +1210,20 @@ def profile(img, type='mean', step=1, mask=None, center=None, rmax=0, clip=True,
             idx = ((rad[r]-step/2) <= rad) & (rad <= (rad[r]+step/2))
             val = polar[idx, :]
             
-            if type == 'mean':
+            if ptype == 'mean':
                 prof[r] = np.nanmean(val)
-            elif type == 'std':
+            elif ptype == 'std':
                 prof[r] = np.nanstd(val)
-            elif type == 'var':
+            elif ptype == 'var':
                 prof[r] = np.nanvar(val)
-            elif type == 'median':
+            elif ptype == 'median':
                 prof[r] = np.nanmedian(val)
-            elif type == 'min':
+            elif ptype == 'min':
                 prof[r] = np.nanmin(val)
-            elif type == 'max':
+            elif ptype == 'max':
                 prof[r] = np.nanmax(val)
             else:
-                raise ValueError('Unknown statistics ptype = {0}. Allowed values are mean, std, var, median, min and max'.format(type))
+                raise ValueError('Unknown statistics ptype = {0}. Allowed values are mean, std, var, median, min and max'.format(ptype))
 
     return prof, rad
 
