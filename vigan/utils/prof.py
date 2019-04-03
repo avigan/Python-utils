@@ -55,6 +55,9 @@ def prof(img, ptype=1, step=1, mask=None, center=None, rmax=0, clip=True, exact=
         First version based on IDL equivalent
     '''
     
+    # make sure we work on a copy
+    img = img.copy()
+    
     # array dimensions
     dimx = img.shape[1]
     dimy = img.shape[0]
