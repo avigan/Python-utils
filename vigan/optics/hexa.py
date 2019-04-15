@@ -162,6 +162,9 @@ def geometry(n_ring, radius, gap=0, inner_gap=False, orient=0, center=(0, 0),
     n_segment = 3 * n_ring * (n_ring+1) + 1
     n_border  = np.sum(np.arange(n_ring, dtype=np.int)*3*6+6) + 6*n_ring
     
+    print('{:03d} segments'.format(n_segment))
+    print('{:03d} borders'.format(n_border))
+    
     # segments definition
     dtype = np.dtype([('num', np.int),
                       ('ring', np.int),
@@ -540,7 +543,7 @@ def geometry(n_ring, radius, gap=0, inner_gap=False, orient=0, center=(0, 0),
     return segments, system
 
 
-def plot(segments, margin=0.05):
+def plot(segments, system, margin=0.05):
     '''
     Plot segments created by the geometry() function
 
@@ -557,6 +560,7 @@ def plot(segments, margin=0.05):
 
     nring = np.max(segments.ring)
     nseg  = len(segments)
+    nbord = segments.b.max()
     
     cmin = np.min(segments.center_node, axis=(0, 1))
     cmax = np.max(segments.center_node, axis=(0, 1))
@@ -566,22 +570,41 @@ def plot(segments, margin=0.05):
     plt.clf()
 
     for s in range(nseg):
+        if segments[s].missing:
+            color = 'r'
+        else:
+            color = 'g'
+            
         plt.text(segments[s].center[0], segments[s].center[1], segments[s].num,
-                 color='r', ha='center',
+                 color=color, ha='center',
                  va='center', weight='bold', size='xx-large')
 
         cx = segments.center_node[s, :, 0]
         cy = segments.center_node[s, :, 1]
-        plt.plot(np.append(cx, cx[0]), np.append(cy, cy[0]), color='r')
-
-    for b in range(6):
-        cx = segments.center_border[:, b, 0]
-        cy = segments.center_border[:, b, 1]
-        plt.plot(cx, cy, linestyle='none', marker='o', color='r')
-
+        plt.plot(np.append(cx, cx[0]), np.append(cy, cy[0]), color='k')
+        
+    status = np.abs(sys).sum(axis=0)
+    for b in range(nbord):
+        idx_x, idx_y = np.where(seg.b == b)
+        if len(idx_x):
+            if status[b]:
+                color = 'g'
+            else:
+                color = 'r'
+            
+            cc = segments.center_border[idx_x[0], idx_y[0]]
+            plt.plot(cc[0], cc[1], linestyle='none', marker='o', color=color)
+        
     plt.xlim(cmin[0]-ext, cmax[0]+ext)
     plt.ylim(cmin[1]-ext, cmax[1]+ext)
 
     plt.title(r'$N_{{ring}}$={:d} - $N_{{seg}}$={:d}'.format(nring, nseg))
     
     plt.tight_layout()
+
+
+if __name__ == '__main__':
+    seg, sys = geometry(4, 1, gap=0, inner_gap=False, orient=0, center=(0, 0),
+                        missing=[7])
+    
+    plot(seg, sys)
