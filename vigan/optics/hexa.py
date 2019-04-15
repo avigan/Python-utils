@@ -582,9 +582,9 @@ def plot(segments, system, margin=0.05):
         cx = segments.center_node[s, :, 0]
         cy = segments.center_node[s, :, 1]
         plt.plot(np.append(cx, cx[0]), np.append(cy, cy[0]), color='k')
-        
+
     status = np.abs(sys).sum(axis=0)
-    for b in range(nbord):
+    for b in range(len(status)):
         idx_x, idx_y = np.where(seg.b == b)
         if len(idx_x):
             if status[b]:
@@ -605,6 +605,6 @@ def plot(segments, system, margin=0.05):
 
 if __name__ == '__main__':
     seg, sys = geometry(4, 1, gap=0, inner_gap=False, orient=0, center=(0, 0),
-                        missing=[7])
+                        missing=[7, 11, 14, 15])
     
     plot(seg, sys)
