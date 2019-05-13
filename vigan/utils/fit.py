@@ -83,7 +83,7 @@ def peak_center(img, window=0, edges=0, mask=None):
         img[:, edges:] = 0
 
     # apply mask
-    if mask:
+    if mask is not None:
         img *= mask
 
     # estimate peak position    
