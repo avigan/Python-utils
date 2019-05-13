@@ -33,7 +33,7 @@ def coordinates(dim, size, diameter=False, strict=False, center=(), cpix=False, 
         Specify the center of the disc. Default is '()', i.e. the center of the array
     
     cpix : bool optional
-        If set to True, the disc is centered on pixel at position (dim//2,dim//2).
+        If set to True, the disc is centered on pixel at position (dim//2, dim//2).
         Default is 'False', i.e. the disc is centered between 4 pixels
     
     normalized : bool optional
@@ -124,10 +124,14 @@ def disc_obstructed(dim, size, obs, **kwargs):
     if (obs < 0) or (obs > 1):
         raise ValueError('obs value must be within [0,1]')
         return None
-        
+    
     ap_out = disc(dim, size, **kwargs)
+    
+    if obs == 0:
+        return ap_out
+    
     ap_in = disc(dim, size*obs, **kwargs)
-        
+    
     return ap_out - ap_in
 
 
@@ -194,7 +198,7 @@ def disc(dim, size, diameter=False, strict=False, center=(), cpix=False, invert=
         Specify the center of the disc. Default is '()', i.e. the center of the array
     
     cpix : bool optional
-        If set to True, the disc is centered on pixel at position (dim//2,dim//2).
+        If set to True, the disc is centered on pixel at position (dim//2, dim//2).
         Default is 'False', i.e. the disc is centered between 4 pixels
     
     invert : bool, optinal
@@ -302,7 +306,7 @@ def vlt_pupil(dim, diameter, spiders_thickness=0.008, spiders_orientation=0,
               dead_actuators=[[ 0.1534, -0.0768], [-0.0984, -0.1240],
                               [-0.1963, -0.3542], [ 0.2766, -0.2799],
                               [ 0.3297, -0.2799]],
-              dead_actuator_diameter=0.025):
+              dead_actuator_diameter=0.025, strict=False, cpix=False):
     '''Very Large Telescope theoretical pupil with central obscuration and spiders
 
     Parameters
@@ -331,6 +335,15 @@ def vlt_pupil(dim, diameter, spiders_thickness=0.008, spiders_orientation=0,
         Size of the dead actuators mask, in fraction of the pupil
         diameter. This is the dead actuators of SPHERE. Default is
         0.025
+
+    strict : bool optional
+        If set to Trye, size must be strictly less than (<), instead of less
+        or equal (<=). Default is 'False'
+    
+    cpix : bool optional
+        If set to True, the disc is centered on pixel at position (dim//2, dim//2).
+        Default is 'False', i.e. the disc is centered between 4 pixels
+    
 
     Returns
     -------
@@ -377,13 +390,13 @@ def vlt_pupil(dim, diameter, spiders_thickness=0.008, spiders_orientation=0,
         spider0 = np.ones(dim)
 
     # main pupil
-    pup = disc_obstructed(dim, diameter, obs, diameter=True, strict=False, cpix=True)
+    pup = disc_obstructed(dim, diameter, obs, diameter=True, strict=strict, cpix=cpix)
 
     # add spiders
     pup *= spider0
     
     # dead actuators
-    if dead_actuator_diameter > 0:
+    if (dead_actuator_diameter > 0) and (dead_actuators is not None):
         dead_actuators = np.array(dead_actuators)
         xarr = dead_actuators[0]
         yarr = dead_actuators[1]
