@@ -199,9 +199,9 @@ def strehl(img, sampling, center=True, rebin=2,
 
         if pixel_tf:
             otf_pixel_1d, r = imutils.profile(pix_tf, ptype='mean', step=1, rmax=dim//2-1)
-            plt.semilogy(r_otf, otf_pixel_1d, lw=2, linestyle=':', label='TF pupil')
+            plt.semilogy(r_otf, otf_pixel_1d, lw=2, linestyle=':', label='TF pixel')
 
-        plt.text(0.5, 0.95, 'Sr = {:.2f}%'.format(strehl*100), transform=plt.gca().transAxes,
+        plt.text(0.5, 0.90, 'Sr = {:.1f}%'.format(strehl*100), transform=plt.gca().transAxes,
                  fontsize='xx-large', fontweight='bold', ha='center')
 
         plt.xlim(0, sampling / 2)
