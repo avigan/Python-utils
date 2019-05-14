@@ -450,32 +450,32 @@ def read_model_bex(path, fname, instrument):
 models = {
     'path': (Path(__file__) / '../data/evolution/').resolve(),
     'properties': [
-        {'instrument': 'nicmos', 'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.HST',           'function': read_model_PHOENIX_websim},
-        {'instrument': 'naco',   'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.NaCo',          'function': read_model_PHOENIX_websim},
-        {'instrument': 'irdis',  'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.SPHERE.Vega',   'function': read_model_PHOENIX_websim},
+        {'instrument': 'nicmos', 'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.HST.gz',           'function': read_model_PHOENIX_websim},
+        {'instrument': 'naco',   'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.NaCo.gz',          'function': read_model_PHOENIX_websim},
+        {'instrument': 'irdis',  'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.SPHERE.Vega.gz',   'function': read_model_PHOENIX_websim},
     
-        {'instrument': 'nicmos', 'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.HST',            'function': read_model_PHOENIX_websim},
-        {'instrument': 'naco',   'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.NaCo',           'function': read_model_PHOENIX_websim},
-        {'instrument': 'irdis',  'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.SPHERE.Vega',    'function': read_model_PHOENIX_websim},
+        {'instrument': 'nicmos', 'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.HST.gz',            'function': read_model_PHOENIX_websim},
+        {'instrument': 'naco',   'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.NaCo.gz',           'function': read_model_PHOENIX_websim},
+        {'instrument': 'irdis',  'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.SPHERE.Vega.gz',    'function': read_model_PHOENIX_websim},
     
-        {'instrument': 'irdis',  'name': 'bhac2015+dusty2000', 'file': 'BHAC15_DUSTY00_iso_t10_10.SPHERE', 'function': read_model_BHAC2015},
-        {'instrument': 'irdis',  'name': 'bhac2015+cond2003',  'file': 'BHAC15_COND03_iso_t10_10.SPHERE',  'function': read_model_BHAC2015},
+        {'instrument': 'irdis',  'name': 'bhac2015+dusty2000', 'file': 'BHAC15_DUSTY00_iso_t10_10.SPHERE.gz', 'function': read_model_BHAC2015},
+        {'instrument': 'irdis',  'name': 'bhac2015+cond2003',  'file': 'BHAC15_COND03_iso_t10_10.SPHERE.gz',  'function': read_model_BHAC2015},
 
-        {'instrument': 'mko',    'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': read_model_sonora},
-        {'instrument': '2mass',  'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': read_model_sonora},
-        {'instrument': 'keck',   'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': read_model_sonora},
-        {'instrument': 'sdss',   'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': read_model_sonora},
-        {'instrument': 'irac',   'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': read_model_sonora},
-        {'instrument': 'wise',   'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': read_model_sonora},
+        {'instrument': 'mko',    'name': 'sonora',    'file': 'sonora_mag_table.dat.gz', 'function': read_model_sonora},
+        {'instrument': '2mass',  'name': 'sonora',    'file': 'sonora_mag_table.dat.gz', 'function': read_model_sonora},
+        {'instrument': 'keck',   'name': 'sonora',    'file': 'sonora_mag_table.dat.gz', 'function': read_model_sonora},
+        {'instrument': 'sdss',   'name': 'sonora',    'file': 'sonora_mag_table.dat.gz', 'function': read_model_sonora},
+        {'instrument': 'irac',   'name': 'sonora',    'file': 'sonora_mag_table.dat.gz', 'function': read_model_sonora},
+        {'instrument': 'wise',   'name': 'sonora',    'file': 'sonora_mag_table.dat.gz', 'function': read_model_sonora},
         
-        {'instrument': 'irdis',  'name': 'bex_cond_coldest',  'file': 'bex_ames-cond_coldest.csv',  'function': read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_cond_warm',     'file': 'bex_ames-cond_warm.csv',     'function': read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_cond_hot',      'file': 'bex_ames-cond_hot.csv',      'function': read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_cond_hottest',  'file': 'bex_ames-cond_hottest.csv',  'function': read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_dusty_coldest', 'file': 'bex_ames-dusty_coldest.csv', 'function': read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_dusty_warm',    'file': 'bex_ames-dusty_warm.csv',    'function': read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_dusty_hot',     'file': 'bex_ames-dusty_hot.csv',     'function': read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_dusty_hottest', 'file': 'bex_ames-dusty_hottest.csv', 'function': read_model_bex}
+        {'instrument': 'irdis',  'name': 'bex_cond_coldest',  'file': 'bex_ames-cond_coldest.csv.gz',  'function': read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_cond_warm',     'file': 'bex_ames-cond_warm.csv.gz',     'function': read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_cond_hot',      'file': 'bex_ames-cond_hot.csv.gz',      'function': read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_cond_hottest',  'file': 'bex_ames-cond_hottest.csv.gz',  'function': read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_dusty_coldest', 'file': 'bex_ames-dusty_coldest.csv.gz', 'function': read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_dusty_warm',    'file': 'bex_ames-dusty_warm.csv.gz',    'function': read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_dusty_hot',     'file': 'bex_ames-dusty_hot.csv.gz',     'function': read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_dusty_hottest', 'file': 'bex_ames-dusty_hottest.csv.gz', 'function': read_model_bex}
     ],
     'data': {}
 }
