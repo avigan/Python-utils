@@ -155,16 +155,16 @@ def strehl(img, sampling, center=True, rebin=2,
         apod = np.ones_like(pupil)
     else:
         if apodizer.lower() == 'sphere-apo1':
-            apod_big = fits.getdata(Path(vigan.__file__).parent / 'data' / 'sphere' / 'sphere_APO1_field_transmission_map.fits')
+            apod_big = fits.getdata(Path(vigan.__file__).parent / 'data' / 'sphere' / 'sphere_APO1_field_transmission_map.fits.gz')
         elif apodizer.lower() == 'sphere-apo2':
-            apod_big = fits.getdata(Path(vigan.__file__).parent / 'data' / 'sphere' / 'sphere_APO2_field_transmission_map.fits')
+            apod_big = fits.getdata(Path(vigan.__file__).parent / 'data' / 'sphere' / 'sphere_APO2_field_transmission_map.fits.gz')
         elif apodizer.lower() == 'sphere-sllc':
-            apod_big = fits.getdata(Path(vigan.__file__).parent / 'data' / 'sphere' / 'sphere_SLLC_field_transmission_map.fits')
+            apod_big = fits.getdata(Path(vigan.__file__).parent / 'data' / 'sphere' / 'sphere_SLLC_field_transmission_map.fits.gz')
         else:
             raise ValueError('Unknown apodizer {}'.format(apodizer))
         
         d = apod_big.shape[-1]
-        p = apod_big[d//2-1, d//2-1:]        
+        p = apod_big[d//2-1, d//2-1:]
         r = np.arange(p.size) / (p.size-1)
         
         rho, theta = aperture.coordinates(dim, int(rr), diameter=True, strict=False, cpix=True, polar=True)
