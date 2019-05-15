@@ -15,7 +15,7 @@ from astropy.io import fits
 def strehl(img, sampling, center=True, rebin=2,
            background_fit=True, background_fit_order=2, pixel_tf=True,
            pupil_shape='circular', central_obscuration=0, apodizer='none',
-           disp=False, ymin=1e-4):
+           disp=False, xmax=1.5, ymin=1e-4):
     '''
     Compute Strehl ratio estimation from a PSF image
 
@@ -55,6 +55,9 @@ def strehl(img, sampling, center=True, rebin=2,
 
     disp : bool
         Display a summary plot. Default is False
+
+    xmax : float
+        Maximal x value in the summary plot. Default is 1.5
 
     ymin : float
         Minimal y value in the summary plot. Default is 1e-4
@@ -204,7 +207,7 @@ def strehl(img, sampling, center=True, rebin=2,
         plt.text(0.5, 0.90, 'Sr = {:.1f}%'.format(strehl*100), transform=plt.gca().transAxes,
                  fontsize='xx-large', fontweight='bold', ha='center')
 
-        plt.xlim(0, sampling / 2)
+        plt.xlim(0, xmax)
         plt.xlabel('Cutoff frequency')
 
         plt.ylim(ymin, 1)
