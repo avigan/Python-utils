@@ -686,12 +686,18 @@ models = {
 }
 
 
-def _read_model_data(instrument, model):
+def _read_model_data(path, models, instrument, model):
     '''
     Return the data from a model and instrument
 
     Parameters
     ----------
+    path :  str
+        Path where to find the models
+
+    models : dict
+        Dictionary containing all the models information and data
+
     instrument : str
         Instrument name
 
@@ -707,24 +713,30 @@ def _read_model_data(instrument, model):
     # lower case
     model = model.lower()
     instrument = instrument.lower()
+    
+    # model key
+    key = instrument.lower()+'_'+model.lower()
 
     # find proper model
     data = None
     for mod in models['properties']:
         if (mod['name'] == model) and (mod['instrument'] == instrument):
-            path  = search_path[0]
+            path  = path
             fname = mod['file']
 
             if not path.exists():
                 raise ValueError('File {0} for model {1} and instrument {2} does not exists. It can be either because the paths to the package are not configure properly or because you are trying to use a private set of models that are not distributed through the package (SONORA, BEX, ...).'.format(path, model, instrument))
             
+            # get data in format (masses, ages, values, data)
             data = mod['function'](path, fname, instrument)
 
     # not found
     if data is None:
         raise ValueError('Could not find model {0} for instrument {1}'.format(model, instrument))
 
-    return data
+    # save data
+    models['data'][key] = data
+    
 
 #######################################
 # public functions
@@ -902,14 +914,14 @@ def model_data(instrument, model):
     data : tuple 
         Tuple (masses, ages, values, data)
     '''
+    
+    # model key
     key = instrument.lower()+'_'+model.lower()
 
     if key not in models['data'].keys():
         print('Loading model {0} for {1}'.format(model, instrument))
         
-        masses, ages, values, data = _read_model_data(instrument, model)
-
-        models['data'][key] = (masses, ages, values, data)
+        _read_model_data(search_path[0], models, instrument, model)
 
     return models['data'][key]
 
