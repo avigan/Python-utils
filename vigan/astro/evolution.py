@@ -951,7 +951,11 @@ def add_search_path(path):
         Path to the additional directory
     '''
     
-    search_path.append(Path(path).expanduser().resolve())
+    path = Path(path).expanduser().resolve()
+    
+    # add only if necessary
+    if path not in search_path:
+        search_path.append(path)
 
 
 def plot_model(instrument, model, param, age_list=None, mass_list=None):
