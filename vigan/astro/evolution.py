@@ -653,39 +653,6 @@ def _interpolate_model(masses, ages, values, data, age, filt, param, Mabs, fill)
     return values
 
 
-#######################################
-# models definitions
-#
-search_path = [(Path(__file__) / '../../data/evolution/').resolve()]
-models = {
-    'properties': [
-        {'instrument': 'nicmos', 'name': 'dusty2000',           'file': 'model.AMES-dusty-2000.M-0.0.HST',           'function': _read_model_PHOENIX_websim},
-        {'instrument': 'naco',   'name': 'dusty2000',           'file': 'model.AMES-dusty-2000.M-0.0.NaCo',          'function': _read_model_PHOENIX_websim},
-        {'instrument': 'irdis',  'name': 'dusty2000',           'file': 'model.AMES-dusty-2000.M-0.0.SPHERE.Vega',   'function': _read_model_PHOENIX_websim},
-        {'instrument': 'nicmos', 'name': 'cond2003',            'file': 'model.AMES-Cond-2003.M-0.0.HST',            'function': _read_model_PHOENIX_websim},
-        {'instrument': 'naco',   'name': 'cond2003',            'file': 'model.AMES-Cond-2003.M-0.0.NaCo',           'function': _read_model_PHOENIX_websim},
-        {'instrument': 'irdis',  'name': 'cond2003',            'file': 'model.AMES-Cond-2003.M-0.0.SPHERE.Vega',    'function': _read_model_PHOENIX_websim},    
-        {'instrument': 'irdis',  'name': 'bhac2015+dusty2000',  'file': 'BHAC15_DUSTY00_iso_t10_10.SPHERE',          'function': _read_model_BHAC2015},
-        {'instrument': 'irdis',  'name': 'bhac2015+cond2003',   'file': 'BHAC15_COND03_iso_t10_10.SPHERE',           'function': _read_model_BHAC2015},
-        {'instrument': 'mko',    'name': 'sonora',              'file': 'sonora_mag_table.dat',                      'function': _read_model_sonora},
-        {'instrument': '2mass',  'name': 'sonora',              'file': 'sonora_mag_table.dat',                      'function': _read_model_sonora},
-        {'instrument': 'keck',   'name': 'sonora',              'file': 'sonora_mag_table.dat',                      'function': _read_model_sonora},
-        {'instrument': 'sdss',   'name': 'sonora',              'file': 'sonora_mag_table.dat',                      'function': _read_model_sonora},
-        {'instrument': 'irac',   'name': 'sonora',              'file': 'sonora_mag_table.dat',                      'function': _read_model_sonora},
-        {'instrument': 'wise',   'name': 'sonora',              'file': 'sonora_mag_table.dat',                      'function': _read_model_sonora},        
-        {'instrument': 'irdis',  'name': 'bex_cond_coldest',    'file': 'bex_ames-cond_coldest.csv',                 'function': _read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_cond_warm',       'file': 'bex_ames-cond_warm.csv',                    'function': _read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_cond_hot',        'file': 'bex_ames-cond_hot.csv',                     'function': _read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_cond_hottest',    'file': 'bex_ames-cond_hottest.csv',                 'function': _read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_dusty_coldest',   'file': 'bex_ames-dusty_coldest.csv',                'function': _read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_dusty_warm',      'file': 'bex_ames-dusty_warm.csv',                   'function': _read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_dusty_hot',       'file': 'bex_ames-dusty_hot.csv',                    'function': _read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_dusty_hottest',   'file': 'bex_ames-dusty_hottest.csv',                'function': _read_model_bex}
-    ],
-    'data': {}
-}
-
-
 def _read_model_data(path, models, instrument, model):
     '''
     Return the data from a model and instrument
@@ -736,7 +703,40 @@ def _read_model_data(path, models, instrument, model):
 
     # save data
     models['data'][key] = data
+
     
+#######################################
+# models definitions
+#
+search_path = [(Path(__file__) / '../../data/evolution/').resolve()]
+models = {
+    'properties': [
+        {'instrument': 'nicmos', 'name': 'dusty2000',           'file': 'model.AMES-dusty-2000.M-0.0.HST',           'function': _read_model_PHOENIX_websim},
+        {'instrument': 'naco',   'name': 'dusty2000',           'file': 'model.AMES-dusty-2000.M-0.0.NaCo',          'function': _read_model_PHOENIX_websim},
+        {'instrument': 'irdis',  'name': 'dusty2000',           'file': 'model.AMES-dusty-2000.M-0.0.SPHERE.Vega',   'function': _read_model_PHOENIX_websim},
+        {'instrument': 'nicmos', 'name': 'cond2003',            'file': 'model.AMES-Cond-2003.M-0.0.HST',            'function': _read_model_PHOENIX_websim},
+        {'instrument': 'naco',   'name': 'cond2003',            'file': 'model.AMES-Cond-2003.M-0.0.NaCo',           'function': _read_model_PHOENIX_websim},
+        {'instrument': 'irdis',  'name': 'cond2003',            'file': 'model.AMES-Cond-2003.M-0.0.SPHERE.Vega',    'function': _read_model_PHOENIX_websim},    
+        {'instrument': 'irdis',  'name': 'bhac2015+dusty2000',  'file': 'BHAC15_DUSTY00_iso_t10_10.SPHERE',          'function': _read_model_BHAC2015},
+        {'instrument': 'irdis',  'name': 'bhac2015+cond2003',   'file': 'BHAC15_COND03_iso_t10_10.SPHERE',           'function': _read_model_BHAC2015},
+        {'instrument': 'mko',    'name': 'sonora',              'file': 'sonora_mag_table.dat',                      'function': _read_model_sonora},
+        {'instrument': '2mass',  'name': 'sonora',              'file': 'sonora_mag_table.dat',                      'function': _read_model_sonora},
+        {'instrument': 'keck',   'name': 'sonora',              'file': 'sonora_mag_table.dat',                      'function': _read_model_sonora},
+        {'instrument': 'sdss',   'name': 'sonora',              'file': 'sonora_mag_table.dat',                      'function': _read_model_sonora},
+        {'instrument': 'irac',   'name': 'sonora',              'file': 'sonora_mag_table.dat',                      'function': _read_model_sonora},
+        {'instrument': 'wise',   'name': 'sonora',              'file': 'sonora_mag_table.dat',                      'function': _read_model_sonora},        
+        {'instrument': 'irdis',  'name': 'bex_cond_coldest',    'file': 'bex_ames-cond_coldest.csv',                 'function': _read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_cond_warm',       'file': 'bex_ames-cond_warm.csv',                    'function': _read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_cond_hot',        'file': 'bex_ames-cond_hot.csv',                     'function': _read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_cond_hottest',    'file': 'bex_ames-cond_hottest.csv',                 'function': _read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_dusty_coldest',   'file': 'bex_ames-dusty_coldest.csv',                'function': _read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_dusty_warm',      'file': 'bex_ames-dusty_warm.csv',                   'function': _read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_dusty_hot',       'file': 'bex_ames-dusty_hot.csv',                    'function': _read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_dusty_hottest',   'file': 'bex_ames-dusty_hottest.csv',                'function': _read_model_bex}
+    ],
+    'data': {}
+}
+
 
 #######################################
 # public functions
