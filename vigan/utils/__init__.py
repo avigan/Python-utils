@@ -8,6 +8,7 @@ from . import prof
 from .sendmail import sendmail
 from .convert import *
 from .blackbody import *
+from .misc import *
 
 # ds9 module not supported in Windows
 try:
