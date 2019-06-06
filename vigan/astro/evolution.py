@@ -14,9 +14,12 @@ from collections import deque
 from pathlib import Path 
 
 
-def read_model_BHAC2015(path, fname, instrument):
+#######################################
+# model loading functions
+#
+def _read_model_BHAC2015(path, fname, instrument):
     '''
-    Read the BHAC2015 models
+    (Private) Read the BHAC2015 models
 
     Parameters
     ----------
@@ -91,14 +94,14 @@ def read_model_BHAC2015(path, fname, instrument):
     data.radius *= cst.R_sun / cst.R_jup
     
     # reshape in final format
-    masses, ages, values, dat = reshape_data(data)
+    masses, ages, values, dat = _reshape_data(data)
 
     return masses, ages, values, dat
 
 
-def read_model_PHOENIX_websim(path, fname, instrument):
+def _read_model_PHOENIX_websim(path, fname, instrument):
     '''
-    Read models from the PHOENIX web simulator
+    (Private) Read models from the PHOENIX web simulator
 
     Parameters
     ----------
@@ -191,14 +194,14 @@ def read_model_PHOENIX_websim(path, fname, instrument):
         pass
         
     # reshape in final format
-    masses, ages, values, dat = reshape_data(data)
+    masses, ages, values, dat = _reshape_data(data)
         
     return masses, ages, values, dat
 
 
-def read_model_sonora(path, fname, instrument):
+def _read_model_sonora(path, fname, instrument):
     '''
-    Read the SONORA models
+    (Private) Read the SONORA models
 
     Parameters
     ----------
@@ -396,9 +399,9 @@ def read_model_sonora(path, fname, instrument):
     return masses, ages, values, data
 
 
-def read_model_bex(path, fname, instrument):
+def _read_model_bex(path, fname, instrument):
     '''
-    Read the BEX models
+    (Private) Read the BEX models
 
     Parameters
     ----------
@@ -444,45 +447,7 @@ def read_model_bex(path, fname, instrument):
     return masses, ages, values, data
 
     
-#######################################
-# models definitions
-#
-models = {
-    'path': (Path(__file__) / '../data/evolution/').resolve(),
-    'properties': [
-        {'instrument': 'nicmos', 'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.HST.gz',           'function': read_model_PHOENIX_websim},
-        {'instrument': 'naco',   'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.NaCo.gz',          'function': read_model_PHOENIX_websim},
-        {'instrument': 'irdis',  'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.SPHERE.Vega.gz',   'function': read_model_PHOENIX_websim},
-    
-        {'instrument': 'nicmos', 'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.HST.gz',            'function': read_model_PHOENIX_websim},
-        {'instrument': 'naco',   'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.NaCo.gz',           'function': read_model_PHOENIX_websim},
-        {'instrument': 'irdis',  'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.SPHERE.Vega.gz',    'function': read_model_PHOENIX_websim},
-    
-        {'instrument': 'irdis',  'name': 'bhac2015+dusty2000', 'file': 'BHAC15_DUSTY00_iso_t10_10.SPHERE.gz', 'function': read_model_BHAC2015},
-        {'instrument': 'irdis',  'name': 'bhac2015+cond2003',  'file': 'BHAC15_COND03_iso_t10_10.SPHERE.gz',  'function': read_model_BHAC2015},
-
-        {'instrument': 'mko',    'name': 'sonora',    'file': 'sonora_mag_table.dat.gz', 'function': read_model_sonora},
-        {'instrument': '2mass',  'name': 'sonora',    'file': 'sonora_mag_table.dat.gz', 'function': read_model_sonora},
-        {'instrument': 'keck',   'name': 'sonora',    'file': 'sonora_mag_table.dat.gz', 'function': read_model_sonora},
-        {'instrument': 'sdss',   'name': 'sonora',    'file': 'sonora_mag_table.dat.gz', 'function': read_model_sonora},
-        {'instrument': 'irac',   'name': 'sonora',    'file': 'sonora_mag_table.dat.gz', 'function': read_model_sonora},
-        {'instrument': 'wise',   'name': 'sonora',    'file': 'sonora_mag_table.dat.gz', 'function': read_model_sonora},
-        
-        {'instrument': 'irdis',  'name': 'bex_cond_coldest',  'file': 'bex_ames-cond_coldest.csv.gz',  'function': read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_cond_warm',     'file': 'bex_ames-cond_warm.csv.gz',     'function': read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_cond_hot',      'file': 'bex_ames-cond_hot.csv.gz',      'function': read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_cond_hottest',  'file': 'bex_ames-cond_hottest.csv.gz',  'function': read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_dusty_coldest', 'file': 'bex_ames-dusty_coldest.csv.gz', 'function': read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_dusty_warm',    'file': 'bex_ames-dusty_warm.csv.gz',    'function': read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_dusty_hot',     'file': 'bex_ames-dusty_hot.csv.gz',     'function': read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_dusty_hottest', 'file': 'bex_ames-dusty_hottest.csv.gz', 'function': read_model_bex}
-    ],
-    'data': {}
-}
-
-
-
-def reshape_data(dataframe):
+def _reshape_data(dataframe):
     '''
     Reshape the data frame in a regular grid that can be used as input in scipy functions.
 
@@ -525,9 +490,12 @@ def reshape_data(dataframe):
     return masses, ages, values, data
 
 
-def monotonic_sublists(lst):
+#######################################
+# utility functions
+#
+def _monotonic_sublists(lst):
     '''
-    Extract monotonic sublists from a list of values
+    (Private) Extract monotonic sublists from a list of values
     
     Given a list of values that is not sorted (such that for some valid
     indices i,j, i<j, sometimes lst[i] > lst[j]), produce a new
@@ -579,9 +547,9 @@ def monotonic_sublists(lst):
     return ret_i, ret_v
 
 
-def interpolate_model(masses, ages, values, data, age, filt, param, Mabs, fill):
+def _interpolate_model(masses, ages, values, data, age, filt, param, Mabs, fill):
     '''
-    Interpolate model grid
+    (Private) Interpolate model grid
 
     Parameters
     ----------
@@ -645,7 +613,7 @@ def interpolate_model(masses, ages, values, data, age, filt, param, Mabs, fill):
         Znew   = Znew[np.isfinite(Znew)]
         
         # find monotonic parts of the signal
-        mono_i, mono_v = monotonic_sublists(Znew)
+        mono_i, mono_v = _monotonic_sublists(Znew)
         
         nsub = len(mono_i)
         sub_idx = np.zeros((2*nsub-1, 2), dtype=np.int)
@@ -685,6 +653,46 @@ def interpolate_model(masses, ages, values, data, age, filt, param, Mabs, fill):
     return values
 
 
+#######################################
+# models definitions
+#
+models = {
+    'path': (Path(__file__) / '../../data/evolution/').resolve(),
+    'properties': [
+        {'instrument': 'nicmos', 'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.HST',           'function': _read_model_PHOENIX_websim},
+        {'instrument': 'naco',   'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.NaCo',          'function': _read_model_PHOENIX_websim},
+        {'instrument': 'irdis',  'name': 'dusty2000', 'file': 'model.AMES-dusty-2000.M-0.0.SPHERE.Vega',   'function': _read_model_PHOENIX_websim},
+    
+        {'instrument': 'nicmos', 'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.HST',            'function': _read_model_PHOENIX_websim},
+        {'instrument': 'naco',   'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.NaCo',           'function': _read_model_PHOENIX_websim},
+        {'instrument': 'irdis',  'name': 'cond2003',  'file': 'model.AMES-Cond-2003.M-0.0.SPHERE.Vega',    'function': _read_model_PHOENIX_websim},
+    
+        {'instrument': 'irdis',  'name': 'bhac2015+dusty2000', 'file': 'BHAC15_DUSTY00_iso_t10_10.SPHERE', 'function': _read_model_BHAC2015},
+        {'instrument': 'irdis',  'name': 'bhac2015+cond2003',  'file': 'BHAC15_COND03_iso_t10_10.SPHERE',  'function': _read_model_BHAC2015},
+
+        {'instrument': 'mko',    'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': _read_model_sonora},
+        {'instrument': '2mass',  'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': _read_model_sonora},
+        {'instrument': 'keck',   'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': _read_model_sonora},
+        {'instrument': 'sdss',   'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': _read_model_sonora},
+        {'instrument': 'irac',   'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': _read_model_sonora},
+        {'instrument': 'wise',   'name': 'sonora',    'file': 'sonora_mag_table.dat', 'function': _read_model_sonora},
+        
+        {'instrument': 'irdis',  'name': 'bex_cond_coldest',  'file': 'bex_ames-cond_coldest.csv',  'function': _read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_cond_warm',     'file': 'bex_ames-cond_warm.csv',     'function': _read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_cond_hot',      'file': 'bex_ames-cond_hot.csv',      'function': _read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_cond_hottest',  'file': 'bex_ames-cond_hottest.csv',  'function': _read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_dusty_coldest', 'file': 'bex_ames-dusty_coldest.csv', 'function': _read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_dusty_warm',    'file': 'bex_ames-dusty_warm.csv',    'function': _read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_dusty_hot',     'file': 'bex_ames-dusty_hot.csv',     'function': _read_model_bex},
+        {'instrument': 'irdis',  'name': 'bex_dusty_hottest', 'file': 'bex_ames-dusty_hottest.csv', 'function': _read_model_bex}
+    ],
+    'data': {}
+}
+
+
+#######################################
+# public functions
+#
 def mag_to_mass(age, distance, mag, Dmag, filt,
                 instrument='IRDIS', model='bhac2015+cond2003', fill=False,
                 age_range=None, distance_range=None, mag_err=None, Dmag_range=None):
@@ -739,7 +747,6 @@ def mag_to_mass(age, distance, mag, Dmag, filt,
     # -------------------------------
     # get model data
     # -------------------------------
-    # masses, ages, values, data = read_model_data(instrument, model)
     masses, ages, values, data = model_data(instrument, model)
 
     # check ages
@@ -809,9 +816,9 @@ def mag_to_mass(age, distance, mag, Dmag, filt,
     # interpolate models
     # -------------------------------
     param = 'Mass'   # only parameter currently available
-    values_nom = interpolate_model(masses, ages, values, data, age, filt, param, Mabs_nom, fill)
-    values_min = interpolate_model(masses, ages, values, data, age_min, filt, param, Mabs_faint, fill)
-    values_max = interpolate_model(masses, ages, values, data, age_max, filt, param, Mabs_bright, fill)
+    values_nom = _interpolate_model(masses, ages, values, data, age, filt, param, Mabs_nom, fill)
+    values_min = _interpolate_model(masses, ages, values, data, age_min, filt, param, Mabs_faint, fill)
+    values_max = _interpolate_model(masses, ages, values, data, age_max, filt, param, Mabs_bright, fill)
     
     values_all = np.vstack((values_min, values_nom, values_max))
     values_min = np.nanmin(values_all, axis=0)
@@ -863,14 +870,14 @@ def model_data(instrument, model):
     if key not in models['data'].keys():
         print('Loading model {0} for {1}'.format(model, instrument))
         
-        masses, ages, values, data = read_model_data(instrument, model)
+        masses, ages, values, data = _read_model_data(instrument, model)
 
         models['data'][key] = (masses, ages, values, data)
 
     return models['data'][key]
 
         
-def read_model_data(instrument, model):
+def _read_model_data(instrument, model):
     '''
     Return the data from a model and instrument
 
