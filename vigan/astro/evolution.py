@@ -653,14 +653,14 @@ def _interpolate_model(masses, ages, values, data, age, filt, param, Mabs, fill)
     return values
 
 
-def _read_model_data(path, models, instrument, model):
+def _read_model_data(paths, models, instrument, model):
     '''
     Return the data from a model and instrument
 
     Parameters
     ----------
-    path :  str
-        Path where to find the models
+    paths : list
+        List of paths where to find the models
 
     models : dict
         Dictionary containing all the models information and data
@@ -688,11 +688,18 @@ def _read_model_data(path, models, instrument, model):
     data = None
     for mod in models['properties']:
         if (mod['name'] == model) and (mod['instrument'] == instrument):
-            path  = path
             fname = mod['file']
+            
+            # search for path
+            found = False
+            for path in paths:
+                if (path / fname).exists():
+                    mod['path'] = path
+                    found = True
+                    break
 
-            if not path.exists():
-                raise ValueError('File {0} for model {1} and instrument {2} does not exists. It can be either because the paths to the package are not configure properly or because you are trying to use a private set of models that are not distributed through the package (SONORA, BEX, ...).'.format(path, model, instrument))
+            if not found:
+                raise ValueError('File {0} for model {1} and instrument {2} does not exists. Are you sure it is in your search path?'.format(path, model, instrument))
             
             # get data in format (masses, ages, values, data)
             data = mod['function'](path, fname, instrument)
@@ -880,7 +887,9 @@ def list_models():
     Print the list of available models
     '''
     print()
-    print('Models path: {0}'.format(search_path[0]))
+    print('Search paths:')
+    for p in search_path:
+        print(' * {}'.format(p))
     print()
 
     for i in range(len(models['properties'])):
@@ -890,7 +899,10 @@ def list_models():
         print(' * instrument: {0}'.format(prop['instrument']))
         print(' * name:       {0}'.format(prop['name']))
         print(' * function:   {0}'.format(prop['function'].__name__))
-        # print(' * path:       {0}'.format(prop['path']))
+        try:
+            print(' * path:       {0}'.format(prop['path']))
+        except KeyError:
+            pass
         print()
 
 
@@ -921,9 +933,25 @@ def model_data(instrument, model):
     if key not in models['data'].keys():
         print('Loading model {0} for {1}'.format(model, instrument))
         
-        _read_model_data(search_path[0], models, instrument, model)
+        _read_model_data(search_path, models, instrument, model)
 
     return models['data'][key]
+
+
+def add_search_path(path):
+    '''
+    Add a new location in the search path
+
+    Useful to easily handle "private" models that are not provided
+    with the public distribution of the package.
+
+    Parameters
+    ----------
+    path : str
+        Path to the additional directory
+    '''
+    
+    search_path.append(Path(path).expanduser().resolve())
 
 
 def plot_model(instrument, model, param, age_list=None, mass_list=None):
