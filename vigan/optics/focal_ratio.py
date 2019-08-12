@@ -9,7 +9,7 @@ from ..utils import imutils
 def focal_ratio(img, threshold=0.001, wave=None, pixel=None, center=True, rebin=2,
                 background_fit=True, background_fit_order=2, disp=False, ymin=1e-4):
     '''
-    Compute Strehl ratio estimation from a PSF image
+    Compute the focal ratio from a PSF image using MTF = |OTF|
 
     Parameters
     ----------
@@ -125,10 +125,11 @@ def focal_ratio(img, threshold=0.001, wave=None, pixel=None, center=True, rebin=
 
         # r_otf = r_otf / (dim//2 - 1) * sampling / 2
 
-        plt.figure('Strehl estimation', figsize=(12, 9))
+        plt.figure('F ratio estimation', figsize=(12, 9))
         plt.clf()
-        plt.semilogy(r_otf, otf_1d, lw=2, label='OTF')
-        plt.semilogy(r_otf, otf_corr_1d, lw=2, linestyle='--', label='OTF (corrected)')
+        
+        plt.semilogy(r_otf, otf_1d, lw=2, label='MTF')
+        plt.semilogy(r_otf, otf_corr_1d, lw=2, linestyle='--', label='MTF (corrected)')
 
         plt.axhline(threshold, linestyle='--', color='r', lw=1)
         plt.axvline(rmax, linestyle='--', color='r', lw=1)
@@ -146,9 +147,11 @@ def focal_ratio(img, threshold=0.001, wave=None, pixel=None, center=True, rebin=
         plt.xlabel('Cutoff pixel')
 
         plt.ylim(ymin, 1)
-        plt.ylabel('OTF')        
+        plt.ylabel('MTF')        
         
         plt.legend(loc='upper right')
         plt.tight_layout()
-
+                
+        
+        
     return sampling, fratio
