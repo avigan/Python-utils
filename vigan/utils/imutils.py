@@ -948,7 +948,7 @@ def fix_badpix_vip(img, bpm, box=5):
     return img_clean
 
 
-def fix_badpix(img, bpm, npix=8, weight=False):
+def fix_badpix(img, bpm, npix=8, weight=False, dmax=10):
     '''Corrects the bad pixels, marked in the bad pixel mask.
 
     It will fill in bad pixels by finding the NPIX nearest good
@@ -978,6 +978,10 @@ def fix_badpix(img, bpm, npix=8, weight=False):
         Weigh good pixel by inverse of their distance in the averaging
         process. Default is False
     
+    dmax : int
+        Maximum distance from the bad pixel over which good pixels are 
+        searched for. Default is 10 pixels
+
     Return
     ------
     img_clean : array_like
@@ -996,7 +1000,7 @@ def fix_badpix(img, bpm, npix=8, weight=False):
 
     # usefull parameters
     ddmin = 2
-    ddmax = 100
+    ddmax = dmax
     shape = img.shape
 
     # create default distance array
@@ -1005,6 +1009,7 @@ def fix_badpix(img, bpm, npix=8, weight=False):
     dist_default = np.sqrt(xx**2 + yy**2)
 
     bpm = np.logical_not(bpm)
+    
     for cx, cy in zip(bp[1], bp[0]):
         # default search box is 2*dd+1 pixel
         dd = ddmin
