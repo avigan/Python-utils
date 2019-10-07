@@ -1,6 +1,6 @@
 import io
 
-from skycalc_cli import SkyCalc
+from skycalc_cli.skycalc import SkyModel
 from astropy.io import fits
 
 
@@ -158,12 +158,7 @@ def sky_model(
         'lsf_boxcar_fwhm': lsf_boxcar_fwhm
     }
     
-    sky_model = SkyCalc.SkyModel()
-
-    # trick to set the right server
-    sky_model.server = 'http://etimecalret-001.eso.org'
-    sky_model.url = sky_model.server + '/observing/etc/api/skycalc'
-    sky_model.deleter_script_url = sky_model.server + '/observing/etc/api/rmtmp'
+    sky_model = SkyModel()
 
     # update parameters
     sky_model.callwith(sky_dict)
