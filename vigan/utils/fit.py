@@ -59,18 +59,28 @@ def circle(x, y):
 
 
 def peak_center(img, window=0, edges=0, mask=None):
-    '''
-    Determine the center position of a peak 
+    '''Determine the center position of a peak 
     
     Parameters
     ----------
     img : array
         Image where the peak must be found
-        
+     
+    window : int
+        Half-size of sub-window in which to do the fit. If 0, then the fit
+        is performed over the full image. Default is 0
+
+    edges : int
+        Number of pixels to hide on the edges. Default is 0
+
+    mask : array
+        Mask to apply to the data. Default is None
+
     Returns
     -------
     cx, cy : tuple
         Center of the peak
+
     '''
 
     img = img.copy()
