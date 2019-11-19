@@ -1,6 +1,5 @@
 import io
-
-from skycalc_cli.skycalc import SkyModel
+from skycalc import SkyModel
 from astropy.io import fits
 
 
