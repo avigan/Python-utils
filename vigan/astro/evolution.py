@@ -488,10 +488,8 @@ def _interpolate_model(masses, ages, values, data, age, filt, param, Mabs, fill)
 
             # fill if outside of available values
             if fill:
-                if Mabs < sub_Znew.min():
-                    values[i] = masses.max()
-                elif Mabs > sub_Znew.max():
-                    values[i] = masses.min()
+                values[i, Mabs < sub_Znew.min()] = masses.max()
+                values[i, Mabs > sub_Znew.max()] = masses.min()
         
         # combine
         values = np.nanmax(values, axis=0)
