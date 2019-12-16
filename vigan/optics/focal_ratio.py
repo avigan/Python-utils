@@ -87,7 +87,7 @@ def focal_ratio(img, threshold=0.001, wave=None, pixel=None, center=True, rebin=
     if background_fit:
         # background subtraction using a linear fit on the first OTF
         # points
-        otf_1d, r = imutils.profile(otf, type='mean', step=1, exact=False)
+        otf_1d, r = imutils.profile(otf, ptype='mean', step=1, exact=False)
 
         dimfit = background_fit_order + 2
         u = np.arange(1, dimfit+1, dtype=np.float)
@@ -108,9 +108,9 @@ def focal_ratio(img, threshold=0.001, wave=None, pixel=None, center=True, rebin=
         otf_corr = otf / otf.max()
     
     # first value of OTF below threshold
-    otf_corr_1d, r = imutils.profile(otf_corr, type='mean', step=1, rmax=dim//2-1)
+    otf_corr_1d, r = imutils.profile(otf_corr, ptype='mean', step=1, rmax=dim//2-1)
     rmax = r[otf_corr_1d >= threshold].max()
-
+    
     sampling = dim/rmax
     fratio   = None
     
@@ -120,8 +120,8 @@ def focal_ratio(img, threshold=0.001, wave=None, pixel=None, center=True, rebin=
     # display result
     if disp:
         otf = otf / otf.max()
-        otf_1d, r_otf = imutils.profile(otf, type='mean', step=1, rmax=dim//2-1)
-        otf_corr_1d, r = imutils.profile(otf_corr, type='mean', step=1, rmax=dim//2-1)
+        otf_1d, r_otf = imutils.profile(otf, ptype='mean', step=1, rmax=dim//2-1)
+        otf_corr_1d, r = imutils.profile(otf_corr, ptype='mean', step=1, rmax=dim//2-1)
 
         # r_otf = r_otf / (dim//2 - 1) * sampling / 2
 
