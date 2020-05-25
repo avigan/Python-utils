@@ -10,7 +10,7 @@ from astropy.time import Time
 from astropy.coordinates import Angle
 
 
-def convert_dates(dates, format='jd'):
+def convert_dates(dates):
     '''
     Convert dates with format YYYY-MM-DD
 
@@ -20,31 +20,27 @@ def convert_dates(dates, format='jd'):
     dates : str, array_like
         List of dates in format YYYY-MM-DD
 
-    format : str
-        Format for the new dates; default is 'jd'. Possibilities are: jd, mjd, iso, yr
-
     Returns
     -------
-    ndates : str, array_like
-        Array of dates in the new format
+    ndates : array_like
+        Array of dates in the new formats: jd, j2000 and yr
     '''
 
-    format = format.lower()
+    ref = Time('2000-01-01T12:00:00')
     
-    ndates = []
+    ndates_jd = []
+    ndates_j2 = []
+    ndates_yr = []
     for date in dates:
         time = Time(date)
-        
-        if format == 'jd':
-            ndates.append(time.jd)
-        elif format == 'mjd':
-            ndates.append(time.mjd)
-        elif format == 'iso':
-            ndates.append(time.isot)
-        elif format == 'yr':
-            ndates.append(time.jyear)
+        ndates_jd.append(time.jd)
+        ndates_yr.append(time.jyear)
 
-    return np.array(ndates)
+        day = float(time.yday.split(':')[1])
+        j2  = (np.floor(time.jyear) - ref.jyear)*365.25 + day
+        ndates_j2.append(j2)
+
+    return np.array(ndates_jd), np.array(ndates_j2), np.array(ndates_yr)
 
 
 def earth_coord(day):
@@ -271,19 +267,21 @@ def track(dates, target_info):
     # calculations
     #
     
-    # jd conversion
-    jd = convert_dates(dates)
+    # date conversion
+    jd, j2, yr = convert_dates(dates)
 
     # sort
     ii = np.argsort(jd)
     jd = jd[ii]
-    
+    j2 = j2[ii]
+
     # epochs
-    delay_days = jd-jd[0]
-    ndays = np.ceil(delay_days.max())+1
+    delay_days = j2-j2[0]
+    days  = np.arange(j2[0], j2[0] + delay_days.max(), 1)
+    ndays = days.size
     
     # Earth motion
-    x_earth, y_earth, z_earth = earth_coord(np.arange(jd[0], jd[0]+ndays))
+    x_earth, y_earth, z_earth = earth_coord(days)
     time = np.arange(ndays)/365.25
     
     # parallactic motion constants
@@ -300,7 +298,7 @@ def track(dates, target_info):
     pm_ra  = pm[0]
     pm_dec = pm[1]
     
-    dra_track = 0 + pm_ra*time + plx * ( d*x_earth - c*y_earth - d*x_earth[0] + c*y_earth[0])
+    dra_track  = 0 + pm_ra*time  + plx * ( d*x_earth  - c*y_earth  - d*x_earth[0]  + c*y_earth[0])
     ddec_track = 0 + pm_dec*time + plx * ( dp*x_earth - cp*y_earth - dp*x_earth[0] + cp*y_earth[0])
 
     return time, dra_track, ddec_track
@@ -437,13 +435,14 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     # calculations
     #
     
-    # jd conversion
-    jd = convert_dates(dates)
-    yr = convert_dates(dates, format='yr')
-
+    # date conversion
+    jd, j2, yr = convert_dates(dates)
+    
     # sort
     ii = np.argsort(jd)
     jd       = jd[ii]
+    j2       = j2[ii]
+    yr       = yr[ii]
     dra      = np.array(dra)[ii]
     dra_err  = np.array(dra_err)[ii]
     ddec     = np.array(ddec)[ii]
@@ -451,14 +450,17 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     
     # epochs
     nepoch = jd.size
-    delay_days = jd-jd[0]
-    
+    delay_days = j2-j2[0]
+
     # Earth motion
-    days = np.arange(jd[0]-2*delay_days.max(), jd[0]+delay_days.max()*2)
+    ext  = 2
+    days = np.concatenate((np.flip(np.arange(j2[0] - 1, j2[0] - ext*delay_days.max(), -1)),
+                           np.arange(j2[0], j2[0] + (1+ext)*delay_days.max(), 1)))
     ndays = days.size
+
     x_earth, y_earth, z_earth = earth_coord(days)
-    day_min = np.min(np.where(days >= jd[0])[0])
-    day_max = np.min(np.where(days >= jd[-1])[0])+1
+    day_min = np.min(np.where(days >= j2[0])[0])
+    day_max = np.max(np.where(days <= j2[-1])[0])
     time = np.arange(ndays)/365.25
     
     # parallactic motion constants
@@ -477,10 +479,10 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     pm_ra_err  = pm_err[0]
     pm_dec_err = pm_err[1]
     
-    dra_track = 0 + pm_ra*time + plx * ( d*x_earth - c*y_earth - d*x_earth[day_min] + c*y_earth[day_min])
+    dra_track  = 0 + pm_ra*time  + plx * ( d*x_earth  - c*y_earth  - d*x_earth[day_min]  + c*y_earth[day_min])
     ddec_track = 0 + pm_dec*time + plx * ( dp*x_earth - cp*y_earth - dp*x_earth[day_min] + cp*y_earth[day_min])
 
-    dra_track -= dra_track[day_min]
+    dra_track  -= dra_track[day_min]
     ddec_track -= ddec_track[day_min]
 
     # motion of the primary, taking into account motion of background objects
@@ -490,10 +492,10 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
         pm_bkg_ra_err  = np.sqrt(pm_ra_err**2 + pm_bkg_err[0]**2)
         pm_bkg_dec_err = np.sqrt(pm_dec_err**2 + pm_bkg_err[1]**2)
 
-        dra_bkg_track = 0 + pm_bkg_ra*time + plx * ( d*x_earth - c*y_earth - d*x_earth[day_min] + c*y_earth[day_min])
+        dra_bkg_track  = 0 + pm_bkg_ra*time  + plx * ( d*x_earth  - c*y_earth  - d*x_earth[day_min]  + c*y_earth[day_min])
         ddec_bkg_track = 0 + pm_bkg_dec*time + plx * ( dp*x_earth - cp*y_earth - dp*x_earth[day_min] + cp*y_earth[day_min])
 
-        dra_bkg_track -= dra_bkg_track[day_min]
+        dra_bkg_track  -= dra_bkg_track[day_min]
         ddec_bkg_track -= ddec_bkg_track[day_min]
     
     # error propagation
@@ -603,7 +605,7 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
                     label=dates[e])
     
         if e > 0:
-            idx = delay_days.astype(int)
+            idx = delay_days.astype(int)-1
             ax.errorbar(dra[0] - dra_track[day_min+idx[e]], ddec[0] - ddec_track[day_min+idx[e]],
                         xerr=dra_err[0], yerr=ddec_err[0], linestyle='none', marker='o',
                         mew=0, ms=ms, mec=col, color='w', ecolor=col, elinewidth=width, capsize=0, zorder=-1)
@@ -619,7 +621,7 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
         ax.plot(dra[0] - dra_bkg_track, ddec[0] - ddec_bkg_track, linestyle='dotted', color=color_bkg, zorder=0)
         ax.plot(dra[0] - dra_bkg_track[day_min:day_max], ddec[0] - ddec_bkg_track[day_min:day_max],
                 linestyle='-', color=color_bkg, zorder=0)
-                
+
         for e in range(1, nepoch):
             col0 = colors.to_rgba(color_dat[e])
             col1 = (col0[0], col0[1], col0[2], 0.5)
