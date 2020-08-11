@@ -304,7 +304,7 @@ def track(dates, target_info):
     return time, dra_track, ddec_track
 
 
-def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, legend_loc=None, filename=''):
+def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, legend_loc=None, filename=None):
     '''
     Proper motion plot for a given target and candidate astrometry
 
@@ -356,7 +356,7 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     
     filename : str
         Path and file name where to save the plot. The plot is saved only
-        if a file name is provided.
+        if a file name is provided. Default is None
     '''
 
     #######################################
@@ -563,7 +563,8 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     zoom = 1.8
     color_nom = 'k'
     color_bkg = (0.5, 0.5, 0.5)
-    color_dat = ['black', 'red', 'teal', 'orange', 'forestgreen', 'purple', 'coral', 'navy', 'gold']
+    color_dat = ['black', 'red', 'teal', 'orange', 'forestgreen', 'purple', 'coral', 'navy', 'gold',
+                 'black', 'red', 'teal', 'orange', 'forestgreen', 'purple', 'coral', 'navy', 'gold']
     width = 2
     ms    = 8
 
@@ -744,15 +745,15 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     ax_pa.set_ylim(pa_min, pa_max)
     
     plt.subplots_adjust(left=0.08, right=0.985, bottom=0.08, top=0.95)
-
+    
     # save
-    if (filename != ''):
+    if filename:
         plt.savefig(path.expanduser(filename))
 
     # restore fontsize
     matplotlib.rcParams.update({'font.size': fs_init})
 
-
+    
 if __name__ == '__main__':
     target   = 'HD_xxxxxx'
     dates    = ['2015-06-07', '2015-07-05', '2016-04-21']
