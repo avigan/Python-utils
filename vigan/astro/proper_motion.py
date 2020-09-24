@@ -304,7 +304,8 @@ def track(dates, target_info):
     return time, dra_track, ddec_track
 
 
-def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, legend_loc=None, filename=None):
+def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, legend_loc=None,
+          axes=None, filename=None):
     '''
     Proper motion plot for a given target and candidate astrometry
 
@@ -354,6 +355,10 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     legend_loc : str or int
         Location of the legend in the RA/DEC plot. Default is None
     
+    axes : matplotlib axes
+        User provided set of axes. Useful for embedding pm plots in 
+        a GUI. Default is None
+
     filename : str
         Path and file name where to save the plot. The plot is saved only
         if a file name is provided. Default is None
@@ -573,9 +578,14 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
 
     # bigger font for this plot
     matplotlib.rcParams.update({'font.size': 17})
-    
-    plt.figure(0, figsize=(17, 8))
-    gs = gridspec.GridSpec(2, 2)
+
+    # create figure if not provided
+    if not axes:
+        fig = plt.figure(0, figsize=(17, 8))
+        fig.clf()
+        gs = gridspec.GridSpec(2, 2)
+    else:
+        ax_main, ax_sep, ax_pa = axes
     
     # RA/DEC plot
     xmin = np.min([np.min(dra[0] - dra_track[day_min:day_max]), dra.min()])
@@ -591,70 +601,71 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     dra_max  = (xmin+xmax)/2 + ext/2*zoom
     ddec_min = (ymin+ymax)/2 - ext/2*zoom
     ddec_max = (ymin+ymax)/2 + ext/2*zoom
+
+    if not axes:
+        ax_main = fig.add_subplot(gs[:, 0])
+    ax_main.clear()
     
-    ax = plt.subplot(gs[:, 0])
-    ax.clear()
-    
-    ax.plot(dra[0] - dra_track, ddec[0] - ddec_track, linestyle='dotted', color=color_nom, zorder=0)
-    ax.plot(dra[0] - dra_track[day_min:day_max], ddec[0] - ddec_track[day_min:day_max], linestyle='-', color=color_nom, zorder=0)
+    ax_main.plot(dra[0] - dra_track, ddec[0] - ddec_track, linestyle='dotted', color=color_nom, zorder=0)
+    ax_main.plot(dra[0] - dra_track[day_min:day_max], ddec[0] - ddec_track[day_min:day_max], linestyle='-', color=color_nom, zorder=0)
     
     for e in range(0, nepoch):
         col = colors.to_rgba(color_dat[e])
 
-        ax.errorbar(dra[e], ddec[e], xerr=dra_err[e], yerr=ddec_err[e], linestyle='none', marker='o',
-                    mew=width, ms=ms, mec=col, color=col, ecolor=col, elinewidth=width, capsize=0,
-                    label=dates[e])
+        ax_main.errorbar(dra[e], ddec[e], xerr=dra_err[e], yerr=ddec_err[e], linestyle='none', marker='o',
+                         mew=width, ms=ms, mec=col, color=col, ecolor=col, elinewidth=width, capsize=0,
+                         label=dates[e])
     
         if e > 0:
             idx = delay_days.astype(int)-1
-            ax.errorbar(dra[0] - dra_track[day_min+idx[e]], ddec[0] - ddec_track[day_min+idx[e]],
-                        xerr=dra_err[0], yerr=ddec_err[0], linestyle='none', marker='o',
-                        mew=0, ms=ms, mec=col, color='w', ecolor=col, elinewidth=width, capsize=0, zorder=-1)
-            ax.errorbar(dra[0] - dra_track[day_min+idx[e]], ddec[0] - ddec_track[day_min+idx[e]], linestyle='none',
+            ax_main.errorbar(dra[0] - dra_track[day_min+idx[e]], ddec[0] - ddec_track[day_min+idx[e]],
+                             xerr=dra_err[0], yerr=ddec_err[0], linestyle='none', marker='o',
+                             mew=0, ms=ms, mec=col, color='w', ecolor=col, elinewidth=width, capsize=0, zorder=-1)
+            ax_main.errorbar(dra[0] - dra_track[day_min+idx[e]], ddec[0] - ddec_track[day_min+idx[e]], linestyle='none',
                         marker='o', mew=width, ms=ms, mec=col, color='none', ecolor=col, elinewidth=width, capsize=0,
                         zorder=+1, label=dates[e]+' (if background)')
 
             if link:
-                ax.plot((dra[e], dra[0] - dra_track[day_min+idx[e]]), (ddec[e], ddec[0] - ddec_track[day_min+idx[e]]),
-                        linestyle='-', color=col)
+                ax_main.plot((dra[e], dra[0] - dra_track[day_min+idx[e]]), (ddec[e], ddec[0] - ddec_track[day_min+idx[e]]),
+                             linestyle='-', color=col)
 
     if pm_bkg is not None:
-        ax.plot(dra[0] - dra_bkg_track, ddec[0] - ddec_bkg_track, linestyle='dotted', color=color_bkg, zorder=0)
-        ax.plot(dra[0] - dra_bkg_track[day_min:day_max], ddec[0] - ddec_bkg_track[day_min:day_max],
-                linestyle='-', color=color_bkg, zorder=0)
+        ax_main.plot(dra[0] - dra_bkg_track, ddec[0] - ddec_bkg_track, linestyle='dotted', color=color_bkg, zorder=0)
+        ax_main.plot(dra[0] - dra_bkg_track[day_min:day_max], ddec[0] - ddec_bkg_track[day_min:day_max],
+                     linestyle='-', color=color_bkg, zorder=0)
 
         for e in range(1, nepoch):
             col0 = colors.to_rgba(color_dat[e])
             col1 = (col0[0], col0[1], col0[2], 0.5)
             
-            ax.errorbar(dra[0] - dra_bkg_track[day_min+idx[e]], ddec[0] - ddec_bkg_track[day_min+idx[e]],
-                        xerr=dra_err[0], yerr=ddec_err[0], linestyle='none', marker='o', alpha=0.5,
-                        mew=0, ms=ms, mec=col, color='w', ecolor=col0, elinewidth=width, capsize=0, zorder=-1)
-            ax.errorbar(dra[0] - dra_bkg_track[day_min+idx[e]], ddec[0] - ddec_bkg_track[day_min+idx[e]], linestyle='none',
-                        marker='o', mew=width, ms=ms, mec=col1, color='none',
-                        ecolor=col, elinewidth=width, capsize=0, zorder=+1)
+            ax_main.errorbar(dra[0] - dra_bkg_track[day_min+idx[e]], ddec[0] - ddec_bkg_track[day_min+idx[e]],
+                             xerr=dra_err[0], yerr=ddec_err[0], linestyle='none', marker='o', alpha=0.5,
+                             mew=0, ms=ms, mec=col, color='w', ecolor=col0, elinewidth=width, capsize=0, zorder=-1)
+            ax_main.errorbar(dra[0] - dra_bkg_track[day_min+idx[e]], ddec[0] - ddec_bkg_track[day_min+idx[e]], linestyle='none',
+                             marker='o', mew=width, ms=ms, mec=col1, color='none',
+                             ecolor=col, elinewidth=width, capsize=0, zorder=+1)
                 
     if legend_loc is not None:
-        ax.legend(loc=legend_loc)
+        ax_main.legend(loc=legend_loc)
     
     # warnings
     off = 0
     if miss_dist:
-        ax.text(dra_max-0.03*ext, ddec_max-0.05*ext, u'\u26A0 Missing distance error', fontsize=12)
+        ax_main.text(dra_max-0.03*ext, ddec_max-0.05*ext, u'\u26A0 Missing distance error', fontsize=12)
         off += 0.05
 
     if miss_pm:
-        ax.text(dra_max-0.03*ext, ddec_max-(0.05+off)*ext, u'\u26A0 Missing stellar proper motion errors', fontsize=12)
+        ax_main.text(dra_max-0.03*ext, ddec_max-(0.05+off)*ext, u'\u26A0 Missing stellar proper motion errors', fontsize=12)
             
-    ax.set_xlim(dra_max, dra_min)
-    ax.set_ylim(ddec_min, ddec_max)
+    ax_main.set_xlim(dra_max, dra_min)
+    ax_main.set_ylim(ddec_min, ddec_max)
     
-    ax.set_xlabel(r'$\Delta\alpha$ [mas]')
-    ax.set_ylabel(r'$\Delta\delta$ [mas]')
+    ax_main.set_xlabel(r'$\Delta\alpha$ [mas]')
+    ax_main.set_ylabel(r'$\Delta\delta$ [mas]')
     
-    ax.set_title(target)
+    ax_main.set_title(target)
     
-    ax.set_aspect('equal', adjustable='box')
+    ax_main.set_aspect('equal', adjustable='box')
     
     # separation plot
     zoom = 1.4
@@ -674,13 +685,21 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     ext = ymax-ymin
     sep_min = (ymin+ymax)/2 - ext/2*zoom
     sep_max = (ymin+ymax)/2 + ext/2*zoom
-    
-    ax_sep = plt.subplot(gs[0, 1:])
+
+    if not axes:
+        ax_sep = fig.add_subplot(gs[0, 1:])
+    ax_sep.clear()
     
     ax_sep.axhline(y=sep[0], linestyle='dashed', color='k')
-    
-    ax_sep.fill_between(yr[0]+time-time[day_min], sep_track-sep_track_err, sep_track+sep_track_err,
-                        linestyle='-', color='b', alpha=0.25)
+
+    # user-provided axes ==> usually for plots embeded in Qt app.
+    # In that case, fill_between() is extremely slow
+    if not axes:
+        ax_sep.fill_between(yr[0]+time-time[day_min], sep_track-sep_track_err, sep_track+sep_track_err,
+                            linestyle='-', color='b', alpha=0.25)
+    else:
+        ax_sep.fill_between(yr[0]+time-time[day_min], sep_track-sep_track_err, sep_track+sep_track_err,
+                            linestyle='-', color='none', ec='0.5')
     
     ax_sep.plot(yr[0]+time-time[day_min], sep_track, linestyle='-', color=color_nom)
 
@@ -712,13 +731,21 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     ext = ymax-ymin
     pa_min = (ymin+ymax)/2 - ext/2*zoom
     pa_max = (ymin+ymax)/2 + ext/2*zoom
-    
-    ax_pa = plt.subplot(gs[1, 1:], sharex=ax_sep)
+
+    if not axes:
+        ax_pa = fig.add_subplot(gs[1, 1:], sharex=ax_sep)
+    ax_pa.clear()
     
     ax_pa.axhline(y=pa[0], linestyle='dashed', color='k')
-    
-    ax_pa.fill_between(yr[0]+time-time[day_min], pa_track-pa_track_err, pa_track+pa_track_err,
-                       linestyle='-', color='b', alpha=0.25)
+
+    # user-provided axes ==> usually for plots embeded in Qt app.
+    # In that case, fill_between() is extremely slow
+    if not axes:
+        ax_pa.fill_between(yr[0]+time-time[day_min], pa_track-pa_track_err, pa_track+pa_track_err,
+                           linestyle='-', color='b', alpha=0.25)
+    else:
+        ax_pa.fill_between(yr[0]+time-time[day_min], pa_track-pa_track_err, pa_track+pa_track_err,
+                           linestyle='-', color='none', ec='0.5')
     
     ax_pa.plot(yr[0]+time-time[day_min], pa_track, linestyle='-', color=color_nom)
 
@@ -743,9 +770,10 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     
     ax_pa.set_xlim(t_min, t_max)
     ax_pa.set_ylim(pa_min, pa_max)
-    
-    plt.subplots_adjust(left=0.08, right=0.985, bottom=0.08, top=0.95)
-    
+
+    if not axes:
+        plt.subplots_adjust(left=0.08, right=0.985, bottom=0.08, top=0.95)
+
     # save
     if filename:
         plt.savefig(path.expanduser(filename))
@@ -753,7 +781,7 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     # restore fontsize
     matplotlib.rcParams.update({'font.size': fs_init})
 
-    
+
 if __name__ == '__main__':
     target   = 'HD_xxxxxx'
     dates    = ['2015-06-07', '2015-07-05', '2016-04-21']
