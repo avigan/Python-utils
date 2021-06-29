@@ -184,7 +184,7 @@ def pol2cart(sep, pa, sep_err=0, pa_err=0, radec=True):
     return dx, dy, dx_err, dy_err
 
 
-def track(dates, target_info):
+def track(dates, target_info, extend=0):
     '''
     Proper motion tracks for a given target and dates
 
@@ -209,6 +209,10 @@ def track(dates, target_info):
 
     target_info : dict
         Dictionary with essential target properties.
+
+    extend : float
+        Extend the tracks by a given number of years before the
+        first epoch and after the last epoch, in years
 
     Returns
     -------
@@ -275,13 +279,18 @@ def track(dates, target_info):
     jd = jd[ii]
     j2 = j2[ii]
 
-    # epochs
+    # Earth motion
     delay_days = j2-j2[0]
-    days  = np.arange(j2[0], j2[0] + delay_days.max(), 1)
+    if extend:
+        days = np.concatenate((np.flip(np.arange(j2[0] - 1, j2[0] - extend*365.25, -1)),
+                               np.arange(j2[0], j2[0] + delay_days.max() + extend*365.25, 1)))
+    else:
+        days  = np.arange(j2[0], j2[0] + delay_days.max(), 1)
     ndays = days.size
     
-    # Earth motion
     x_earth, y_earth, z_earth = earth_coord(days)
+    day_min = np.min(np.where(days >= j2[0])[0])
+    day_max = np.max(np.where(days <= j2[-1])[0])    
     time = np.arange(ndays)/365.25
     
     # parallactic motion constants
@@ -301,7 +310,10 @@ def track(dates, target_info):
     dra_track  = 0 + pm_ra*time  + plx * ( d*x_earth  - c*y_earth  - d*x_earth[0]  + c*y_earth[0])
     ddec_track = 0 + pm_dec*time + plx * ( dp*x_earth - cp*y_earth - dp*x_earth[0] + cp*y_earth[0])
 
-    return time, dra_track, ddec_track
+    dra_track  -= dra_track[day_min]
+    ddec_track -= ddec_track[day_min]
+    
+    return time-time[day_max], dra_track, ddec_track
 
 
 def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, legend_loc=None,
