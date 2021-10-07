@@ -1,11 +1,14 @@
 import numpy as np
 import scipy.fftpack as fft
+import logging
 
 from scipy.special import gamma
 
+_log = logging.getLogger(__name__)
+
 
 def vk_fit_psd(f, r0, L0, fc, turb=False):
-    print('Fitting error')
+    _log.debug('Fitting error')
     
     # constants
     cst = (gamma(11/6)**2 / (2*np.pi**(11/3))) * (24*gamma(6/5)/5)**(5/6)
@@ -20,13 +23,13 @@ def vk_fit_psd(f, r0, L0, fc, turb=False):
 
     # total variance
     var_fit = np.sum(out)*f.ravel()[1]**2
-    print(' * variance = {:.6f} rad^2'.format(var_fit))
+    _log.debug(' * variance = {:.6f} rad^2'.format(var_fit))
     
     return out, var_fit
 
 
 def vk_servo_psd(f, arg_f, Cn2, z, dz, v, arg_v, r0, L0, Td, Ti, fc, gain):
-    print('Servo error')
+    _log.debug('Servo error')
     
     # constants
     cst = (gamma(11/6)**2 / (2*np.pi**(11/3))) * (24*gamma(6/5)/5)**(5/6)
@@ -50,14 +53,14 @@ def vk_servo_psd(f, arg_f, Cn2, z, dz, v, arg_v, r0, L0, Td, Ti, fc, gain):
 
     # total variance
     var_servo = np.sum(out)*f.ravel()[1]**2
-    print(' * variance = {:.6f} rad^2'.format(var_servo))
+    _log.debug(' * variance = {:.6f} rad^2'.format(var_servo))
     
     return out, var_servo
     
 
 def vk_alias_psd(f, arg_f, Cn2, z, dz, v, arg_v, r0, L0,
                  Td, Ti, fc, pyr=False, inf_fun=False):
-    print('Aliasing error')
+    _log.debug('Aliasing error')
     
     # constants
     cst = (gamma(11/6)**2 / (2*np.pi**(11/3))) * (24*gamma(6/5)/5)**(5/6)
@@ -151,13 +154,13 @@ def vk_alias_psd(f, arg_f, Cn2, z, dz, v, arg_v, r0, L0,
 
     # total variance
     var_alias = np.sum(out)*f.ravel()[1]**2
-    print(' * variance = {:.6f} rad^2'.format(var_alias))
+    _log.debug(' * variance = {:.6f} rad^2'.format(var_alias))
     
     return out, var_alias
 
 
 def vk_aniso_psd(f, arg_f, Cn2, z, dz, r0, L0, fc, theta, azimuth):
-    print('Anisoplanetism error')
+    _log.debug('Anisoplanetism error')
     
     # constants
     cst = (gamma(11/6)**2 / (2*np.pi**(11/3))) * (24*gamma(6/5)/5)**(5/6)
@@ -176,7 +179,7 @@ def vk_aniso_psd(f, arg_f, Cn2, z, dz, r0, L0, fc, theta, azimuth):
     
     # total variance
     var_aniso = np.sum(out)*f.ravel()[1]**2
-    print(' * variance = {:.6f} rad^2'.format(var_aniso))
+    _log.debug(' * variance = {:.6f} rad^2'.format(var_aniso))
 
     return out, var_aniso
 
@@ -214,7 +217,7 @@ def aniso_refrac_diff(zenith0, wave0, wave):
 
 
 def vk_diff_refr_psd(f, arg_f, Cn2, z, dz, r0, L0, fc, zenith, wfs_wave, img_wave, azimuth=0):
-    print('Differential refraction error')
+    _log.debug('Differential refraction error')
     # constants
     cst = (gamma(11/6)**2 / (2*np.pi**(11/3))) * (24*gamma(6/5)/5)**(5/6)
     h2  = 1
@@ -234,13 +237,13 @@ def vk_diff_refr_psd(f, arg_f, Cn2, z, dz, r0, L0, fc, zenith, wfs_wave, img_wav
     
     # total variance
     var_diff_refr = np.sum(out)*f.ravel()[1]**2
-    print(' * variance = {:.6f} rad^2'.format(var_diff_refr))
+    _log.debug(' * variance = {:.6f} rad^2'.format(var_diff_refr))
 
     return out, var_diff_refr
     
 
 def vk_diffr_psd(f, fc, alpha):
-    print('Diffraction error')
+    _log.debug('Diffraction error')
     f_ind = np.where((f != 0) & (f < fc))
 
     # compute PSD
@@ -249,7 +252,7 @@ def vk_diffr_psd(f, fc, alpha):
 
     # total variance
     var_diffr = np.sum(out)*f.ravel()[1]**2
-    print(' * variance = {:.6f} rad^2'.format(var_diffr))
+    _log.debug(' * variance = {:.6f} rad^2'.format(var_diffr))
 
     return out, var_diffr
 
@@ -274,7 +277,7 @@ def reconstructor_psd(f, arg_f, Dtel, a, r0, L0):
     
 
 def vk_noise_psd(f, arg_f, Dtel, fc, var_wfs, r0, L0, gain=0, pyr=False):
-    print('Reconstruction noise error')
+    _log.debug('Reconstruction noise error')
     
     if pyr:
         #
@@ -297,7 +300,7 @@ def vk_noise_psd(f, arg_f, Dtel, fc, var_wfs, r0, L0, gain=0, pyr=False):
 
     # total variance
     var_noise = np.sum(out)*f.ravel()[1]**2
-    print(' * variance = {:.6f} rad^2'.format(var_noise))
+    _log.debug(' * variance = {:.6f} rad^2'.format(var_noise))
 
     return out, var_noise
 
@@ -428,7 +431,7 @@ def vk_ao_psd(f, arg_f, Cn2, z, dz, v, arg_v, r0, L0,
     -------
     '''
 
-    print('Computing AO system PSD')
+    _log.debug('Computing AO system PSD')
     
     psd_out = np.zeros(f.shape)
     var_ao  = {}
@@ -678,7 +681,7 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
         # compute all layers independently
         #
         n_layers = len(z)
-        print('Computing {} layers'.format(n_layers))
+        _log.debug('Computing {} layers'.format(n_layers))
 
         # make sure L0 has the right number 
         if isinstance(L0, (list, tuple, np.ndarray)):
@@ -696,7 +699,7 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
             tab = np.empty((n_layers, n_screen, dim, dim))
 
         for l in range(n_layers):
-            print(' * phase screen {}/{}'.format(l+1, n_layers))
+            _log.debug(' * phase screen {}/{}'.format(l+1, n_layers))
             local_r0      = Cn2[l]**(-3/5)*r0
             local_L0      = L0[l]
             local_var_wfs = var_wfs/n_layers
@@ -754,13 +757,13 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
             #
             # compute phase screens
             #
-            print('Generating {} phase screen(s)'.format(n_screen))
+            _log.debug('Generating {} phase screen(s)'.format(n_screen))
 
             # split in several chunks
             nchunk = n_screen // chunk_size
             rem    = n_screen % chunk_size
             
-            chunks = np.array([], dtype=np.int)
+            chunks = np.array([], dtype=np.int64)
             if nchunk > 0:
                 chunks = np.append(chunks, np.full(nchunk, chunk_size))
             if rem > 0:
@@ -770,7 +773,7 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
             phs = np.empty((n_screen, local_dim, local_dim), dtype=np.float32)
             for c in range(nchunk):
                 if nchunk > 1:
-                    print(' * chunk {} / {}'.format(c+1, nchunk))
+                    _log.debug(' * chunk {} / {}'.format(c+1, nchunk))
                 
                 # size of current chunk
                 chunk = chunks[c]
@@ -1026,27 +1029,28 @@ if __name__ == '__main__':
     #
     # atmopsheric parameters
     #
-    seeing = 1.2                 # @ 0.5 micron ["]
+    seeing = 0.85                 # @ 0.5 micron ["]
     L0     = 25                  # outer scale [m]
     z      = [0, 1, 10]          # altitude [km]
     Cn2    = [20, 60, 20]        # weight [%]
-    v      = [12.5, 12.5, 12.5]  # wind speed [m/s]
-    arg_v  = [0, 45, 90]         # wind direction [deg]
+    v      = [5.0, 12.5, 30]  # wind speed [m/s]
+    arg_v  = [0, 15, 250]         # wind direction [deg]
 
     #
     # guide star parameters
     #
     magnitude = 4                # GS magnitude (WFS band)
-    zenith    = 30               # zenith angle
+    zenith    = 20               # zenith angle
     azimuth   = 0                # azimuth angle
 
     #
     # simulation parameters
     #
-    seed      = 123
+    seed      = None
     dim_pup   = 240
-    n_screen  = 207
     
+    n_screen  = 5
+
     #==================================================
     # fined-tunned parameters for 2018-04-04T00:40:00
     # star     = 1 Pup
