@@ -184,7 +184,7 @@ def pol2cart(sep, pa, sep_err=0, pa_err=0, radec=True):
     return dx, dy, dx_err, dy_err
 
 
-def track(dates, target_info, extend=0):
+def track(dates, target_info, reference=0, extend=0):
     '''
     Proper motion tracks for a given target and dates
 
@@ -210,6 +210,9 @@ def track(dates, target_info, extend=0):
     target_info : dict
         Dictionary with essential target properties.
 
+    reference : int
+        Date reference. 
+
     extend : float
         Extend the tracks by a given number of years before the
         first epoch and after the last epoch, in years
@@ -223,6 +226,9 @@ def track(dates, target_info, extend=0):
     dra_track, ddec_track : float, array_like
         Astrometry of a background stationary object, in mas. The astrometry
         is relative to the star.
+
+    dates_indices : array
+        Array containing the indices corresponding to the input dates
 
     '''
 
@@ -273,24 +279,27 @@ def track(dates, target_info, extend=0):
     
     # date conversion
     jd, j2, yr = convert_dates(dates)
-
+    
     # sort
     ii = np.argsort(jd)
     jd = jd[ii]
     j2 = j2[ii]
 
     # Earth motion
-    delay_days = j2-j2[0]
+    delay_days = j2-j2[reference]
     if extend:
-        days = np.concatenate((np.flip(np.arange(j2[0] - 1, j2[0] - extend*365.25, -1)),
-                               np.arange(j2[0], j2[0] + delay_days.max() + extend*365.25, 1)))
+        days = np.concatenate((np.flip(np.arange(j2[reference] - 1, j2[reference] - np.abs(delay_days).max() - extend*365.25, -1)),
+                               np.arange(j2[reference], j2[reference] + np.abs(delay_days).max() + extend*365.25, 1)))
     else:
-        days  = np.arange(j2[0], j2[0] + delay_days.max(), 1)
+        days  = np.arange(j2[reference], j2[reference] + delay_days.max() + 1, 1)
     ndays = days.size
+
+    dates_indices = []
+    for idx in range(len(dates)):
+        dates_indices.append(np.min(np.where(days >= j2[idx])[0]))
+    day_ref = dates_indices[reference]
     
     x_earth, y_earth, z_earth = earth_coord(days)
-    day_min = np.min(np.where(days >= j2[0])[0])
-    day_max = np.max(np.where(days <= j2[-1])[0])    
     time = np.arange(ndays)/365.25
     
     # parallactic motion constants
@@ -310,10 +319,10 @@ def track(dates, target_info, extend=0):
     dra_track  = 0 + pm_ra*time  + plx * ( d*x_earth  - c*y_earth  - d*x_earth[0]  + c*y_earth[0])
     ddec_track = 0 + pm_dec*time + plx * ( dp*x_earth - cp*y_earth - dp*x_earth[0] + cp*y_earth[0])
 
-    dra_track  -= dra_track[day_min]
-    ddec_track -= ddec_track[day_min]
+    dra_track  -= dra_track[day_ref]
+    ddec_track -= ddec_track[day_ref]
     
-    return time-time[day_max], dra_track, ddec_track
+    return time-time[day_ref], dra_track, ddec_track, dates_indices
 
 
 def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, legend_loc=None,
