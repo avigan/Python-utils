@@ -2,6 +2,8 @@ import numpy as np
 import scipy.fftpack as fft
 import logging
 import multiprocessing
+import ctypes
+import os
 
 from scipy.special import gamma
 
@@ -485,6 +487,54 @@ def vk_ao_psd(f, arg_f, Cn2, z, dz, v, arg_v, r0, L0,
     return psd_out, var_ao
 
 
+def array_to_numpy(shared_array, shape, dtype):
+    if shared_array is None:
+        return None
+
+    numpy_array = np.frombuffer(shared_array, dtype=dtype)
+    if shape is not None:
+        numpy_array.shape = shape
+
+    return numpy_array
+
+
+def tpool_init(phs_data_i, phs_shape_i):
+    global phs_data, phs_shape
+
+    phs_data  = phs_data_i
+    phs_shape = phs_shape_i
+
+    
+def compute_phase_screen(idx, local_dim, local_L, psd, img_wave):
+    global phs_data, phs_shape
+
+    if (idx % 100) == 0:
+        _log.info(f' ==> phase screen {idx}')
+    
+    phs_np = array_to_numpy(phs_data, phs_shape, dtype=np.float32)
+
+    # random draw of Gaussian noise
+    tab = np.random.normal(loc=0, scale=1, size=(local_dim, local_dim))
+
+    # switch to Fourier space
+    tab = fft.ifft2(tab)
+
+    # normalize
+    tab *= local_dim*local_L
+
+    # multiply with PSD
+    tab = tab * np.sqrt(psd)
+
+    # switch back to direct space
+    tab = fft.fft2(tab).real
+
+    # normalize
+    tab *= img_wave / (2*np.pi) / local_L**2
+
+    # save
+    phs_np[idx] = tab
+
+
 def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
                     Td, Ti, Dtel, fc, theta, var_wfs, alpha,
                     layers=False,
@@ -493,6 +543,7 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
                     psd_only=False,
                     n_screen=1,
                     chunk_size=500,
+                    parallel=False,
                     seed=None,
                     turb=False,
                     fit=True,
@@ -588,6 +639,9 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
         Number of phase screens generated in parallel. Useful when a very 
         large number of phase screens are requested. Default is 500
 
+    parallel : bool
+        Compute screens in parallel rather than in chunks. Default is False
+    
     seed : int
         Seed for andom number generator. Default is None
 
@@ -760,55 +814,72 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
             #
             _log.info('Generating {} phase screen(s)'.format(n_screen))
 
-            # split in several chunks
-            nchunk = n_screen // chunk_size
-            rem    = n_screen % chunk_size
-            
-            chunks = np.array([], dtype=np.int64)
-            if nchunk > 0:
-                chunks = np.append(chunks, np.full(nchunk, chunk_size))
-            if rem > 0:
-                chunks = np.append(chunks, rem)
-                nchunk += 1
+            if parallel:
+                phs_shape = (n_screen, local_dim, local_dim)
+                phs_data  = multiprocessing.RawArray(ctypes.c_float, int(np.prod(phs_shape)))
 
-            phs = np.empty((n_screen, local_dim, local_dim), dtype=np.float32)
-            for c in range(nchunk):
-                if nchunk > 1:
-                    _log.info(' * chunk {} / {}'.format(c+1, nchunk))
-                
-                # size of current chunk
-                chunk = chunks[c]
-                idx   = np.sum(chunks[:c])
-                
-                # random draw of Gaussian noise
-                tab = np.random.normal(loc=0, scale=1, size=(chunk, local_dim, local_dim))
-                
-                # switch to Fourier space
-                tab = fft.ifft2(tab)
+                ncpu = int(os.environ.get('SLURM_JOB_CPUS_PER_NODE', multiprocessing.cpu_count()))
+                pool = multiprocessing.Pool(processes=ncpu, initializer=tpool_init, initargs=(phs_data, phs_shape))
 
-                # normalize
-                tab *= local_dim*local_L
+                tasks = []
+                for idx in range(n_screen):
+                    tasks.append(pool.apply_async(compute_phase_screen, args=(idx, local_dim, local_L, psd, img_wave)))
+                    # compute_correlation(i)
+    
+                pool.close()
+                pool.join()
 
-                # multiply with PSD
-                tab = tab * np.sqrt(psd)
+                phs = array_to_numpy(phs_data, phs_shape, np.float32)
+            else:
+                # split in several chunks
+                nchunk = n_screen // chunk_size
+                rem    = n_screen % chunk_size
 
-                # switch back to direct space
-                tab = fft.fft2(tab).real
+                chunks = np.array([], dtype=np.int64)
+                if nchunk > 0:
+                    chunks = np.append(chunks, np.full(nchunk, chunk_size))
+                if rem > 0:
+                    chunks = np.append(chunks, rem)
+                    nchunk += 1
 
-                # normalize
-                tab *= img_wave / (2*np.pi) / local_L**2
+                phs = np.empty((n_screen, local_dim, local_dim), dtype=np.float32)
+                for c in range(nchunk):
+                    if nchunk > 1:
+                        _log.info(' * chunk {} / {}'.format(c+1, nchunk))
 
-                # save
-                phs[idx:idx+chunk, ...] = tab
+                    # size of current chunk
+                    chunk = chunks[c]
+                    idx   = np.sum(chunks[:c])
+
+                    # random draw of Gaussian noise
+                    tab = np.random.normal(loc=0, scale=1, size=(chunk, local_dim, local_dim))
+
+                    # switch to Fourier space
+                    tab = fft.ifft2(tab)
+
+                    # normalize
+                    tab *= local_dim*local_L
+
+                    # multiply with PSD
+                    tab = tab * np.sqrt(psd)
+
+                    # switch back to direct space
+                    tab = fft.fft2(tab).real
+
+                    # normalize
+                    tab *= img_wave / (2*np.pi) / local_L**2
+
+                    # save
+                    phs[idx:idx+chunk, ...] = tab
 
             if not full:
                 phs = phs[0:fin_dim, 0:fin_dim]
 
             return phs, var_ao
 
-
+    
 def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azimuth,
-                           spat_filter=0.7, img_wave=1.593e-6, dim_pup=240, n_screen=1, chunk_size=500,
+                           spat_filter=0.7, img_wave=1.593e-6, dim_pup=240, n_screen=1, chunk_size=500, parallel=False,
                            fit=True, servo=True, alias=True, noise=True, diff_refr=True,
                            psd_only=False, seed=None):
     '''
@@ -861,6 +932,9 @@ def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azim
         Number of phase screens generated in parallel. Useful when a very 
         large number of phase screens are requested. Default is 500
 
+    parallel : bool
+        Compute screens in parallel rather than in chunks. Default is False
+    
     fit : bool
         Include fitting error term. Default is True
 
@@ -1020,7 +1094,7 @@ def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azim
                                   fit=fit, servo=servo, alias=alias, noise=noise,
                                   gain=gain1, coeff_alias=coeff_alias, diffr=diffr,
                                   full=full, psd_only=psd_only, n_screen=n_screen,
-                                  chunk_size=chunk_size)
+                                  chunk_size=chunk_size, parallel=parallel)
 
     return res
 
