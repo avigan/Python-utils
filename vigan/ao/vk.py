@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.fftpack as fft
 import logging
+import multiprocessing
 
 from scipy.special import gamma
 
@@ -757,7 +758,7 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
             #
             # compute phase screens
             #
-            _log.debug('Generating {} phase screen(s)'.format(n_screen))
+            _log.info('Generating {} phase screen(s)'.format(n_screen))
 
             # split in several chunks
             nchunk = n_screen // chunk_size
@@ -773,7 +774,7 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
             phs = np.empty((n_screen, local_dim, local_dim), dtype=np.float32)
             for c in range(nchunk):
                 if nchunk > 1:
-                    _log.debug(' * chunk {} / {}'.format(c+1, nchunk))
+                    _log.info(' * chunk {} / {}'.format(c+1, nchunk))
                 
                 # size of current chunk
                 chunk = chunks[c]
