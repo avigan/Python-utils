@@ -1256,6 +1256,8 @@ def median(img, dim):
     img_filt : array
         Median filtered image
     '''
+
+    dim = np.round(dim).astype(np.int64)
     img_filt = img - ndimage.filters.median_filter(img, size=(dim, dim))
     
     return img_filt
