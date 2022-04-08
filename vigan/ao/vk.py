@@ -985,7 +985,7 @@ def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azim
         # Computation of Ns
         Ns          = 1.5 * Nt
         var_pho_wfs = np.pi**2/(2*np.log(2))*1/Nphoton*(Nt/Nd)**2
-        var_ron_wfs = p.pi**2/3*(ron/Nphoton)**2*(Ns**2/Nd)**2
+        var_ron_wfs = np.pi**2/3*(ron/Nphoton)**2*(Ns**2/Nd)**2
         gain1       = gain
 
     if emccd:
