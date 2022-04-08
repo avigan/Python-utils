@@ -411,7 +411,7 @@ def vlt_pupil(dim, diameter, spiders_thickness=0.008, spiders_orientation=0,
     return (pup >= 0.5).astype(int)
 
 
-def sphere_irdis_pupil(dim=384, dead_actuator_diameter=0, spiders=True, spiders_orientation=0):
+def sphere_irdis_pupil(dim=384, dead_actuator_diameter=0, spiders=True, spiders_orientation=0, **kwargs):
     '''SPHERE pupil with dead actuators mask and spiders. Measured from a
     real pupil image acquired with IRDIS. In this SPHERE pupil, the origin
     and angle of the spiders are tweaked to match exactly the pupil as 
@@ -495,11 +495,11 @@ def sphere_irdis_pupil(dim=384, dead_actuator_diameter=0, spiders=True, spiders_
         spider0 = np.ones(dim)
     
     # main pupil
-    pup = disc(dim, diameter, diameter=True, strict=False, cpix=True)
+    pup = disc(dim, diameter, diameter=True, **kwargs)
     
     # central obscuration and spiders
     pup *= disc(dim, diameter*obs*1.03, center=(dim//2-0.8, dim//2), diameter=True,
-                strict=False, cpix=True, invert=True)
+                invert=True, **kwargs)
     pup *= spider0
 
     # dead actuators on the edges

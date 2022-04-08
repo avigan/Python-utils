@@ -10,7 +10,7 @@ from astropy.time import Time
 from astropy.coordinates import Angle
 
 
-def convert_dates(dates, format='jd'):
+def convert_dates(dates):
     '''
     Convert dates with format YYYY-MM-DD
 
@@ -20,31 +20,27 @@ def convert_dates(dates, format='jd'):
     dates : str, array_like
         List of dates in format YYYY-MM-DD
 
-    format : str
-        Format for the new dates; default is 'jd'. Possibilities are: jd, mjd, iso, yr
-
     Returns
     -------
-    ndates : str, array_like
-        Array of dates in the new format
+    ndates : array_like
+        Array of dates in the new formats: jd, j2000 and yr
     '''
 
-    format = format.lower()
+    ref = Time('2000-01-01T12:00:00')
     
-    ndates = []
+    ndates_jd = []
+    ndates_j2 = []
+    ndates_yr = []
     for date in dates:
         time = Time(date)
-        
-        if format == 'jd':
-            ndates.append(time.jd)
-        elif format == 'mjd':
-            ndates.append(time.mjd)
-        elif format == 'iso':
-            ndates.append(time.isot)
-        elif format == 'yr':
-            ndates.append(time.jyear)
+        ndates_jd.append(time.jd)
+        ndates_yr.append(time.jyear)
 
-    return np.array(ndates)
+        day = float(time.yday.split(':')[1])
+        j2  = (np.floor(time.jyear) - ref.jyear)*365.25 + day
+        ndates_j2.append(j2)
+
+    return np.array(ndates_jd), np.array(ndates_j2), np.array(ndates_yr)
 
 
 def earth_coord(day):
@@ -188,7 +184,7 @@ def pol2cart(sep, pa, sep_err=0, pa_err=0, radec=True):
     return dx, dy, dx_err, dy_err
 
 
-def track(dates, target_info):
+def track(dates, target_info, reference=0, extend=0):
     '''
     Proper motion tracks for a given target and dates
 
@@ -214,6 +210,13 @@ def track(dates, target_info):
     target_info : dict
         Dictionary with essential target properties.
 
+    reference : int
+        Date reference. 
+
+    extend : float
+        Extend the tracks by a given number of years before the
+        first epoch and after the last epoch, in years
+
     Returns
     -------
 
@@ -223,6 +226,9 @@ def track(dates, target_info):
     dra_track, ddec_track : float, array_like
         Astrometry of a background stationary object, in mas. The astrometry
         is relative to the star.
+
+    dates_indices : array
+        Array containing the indices corresponding to the input dates
 
     '''
 
@@ -271,19 +277,29 @@ def track(dates, target_info):
     # calculations
     #
     
-    # jd conversion
-    jd = convert_dates(dates)
-
+    # date conversion
+    jd, j2, yr = convert_dates(dates)
+    
     # sort
     ii = np.argsort(jd)
     jd = jd[ii]
-    
-    # epochs
-    delay_days = jd-jd[0]
-    ndays = np.ceil(delay_days.max())+1
-    
+    j2 = j2[ii]
+
     # Earth motion
-    x_earth, y_earth, z_earth = earth_coord(np.arange(jd[0], jd[0]+ndays))
+    delay_days = j2-j2[reference]
+    if extend:
+        days = np.concatenate((np.flip(np.arange(j2[reference] - 1, j2[reference] - np.abs(delay_days).max() - extend*365.25, -1)),
+                               np.arange(j2[reference], j2[reference] + np.abs(delay_days).max() + extend*365.25, 1)))
+    else:
+        days  = np.arange(j2[reference], j2[reference] + delay_days.max() + 1, 1)
+    ndays = days.size
+
+    dates_indices = []
+    for idx in range(len(dates)):
+        dates_indices.append(np.min(np.where(days >= j2[idx])[0]))
+    day_ref = dates_indices[reference]
+    
+    x_earth, y_earth, z_earth = earth_coord(days)
     time = np.arange(ndays)/365.25
     
     # parallactic motion constants
@@ -300,13 +316,17 @@ def track(dates, target_info):
     pm_ra  = pm[0]
     pm_dec = pm[1]
     
-    dra_track = 0 + pm_ra*time + plx * ( d*x_earth - c*y_earth - d*x_earth[0] + c*y_earth[0])
+    dra_track  = 0 + pm_ra*time  + plx * ( d*x_earth  - c*y_earth  - d*x_earth[0]  + c*y_earth[0])
     ddec_track = 0 + pm_dec*time + plx * ( dp*x_earth - cp*y_earth - dp*x_earth[0] + cp*y_earth[0])
 
-    return time, dra_track, ddec_track
+    dra_track  -= dra_track[day_ref]
+    ddec_track -= ddec_track[day_ref]
+    
+    return time-time[day_ref], dra_track, ddec_track, dates_indices
 
 
-def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, legend_loc=None, filename=''):
+def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, legend_loc=None,
+          axes=None, filename=None):
     '''
     Proper motion plot for a given target and candidate astrometry
 
@@ -356,9 +376,13 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     legend_loc : str or int
         Location of the legend in the RA/DEC plot. Default is None
     
+    axes : matplotlib axes
+        User provided set of axes. Useful for embedding pm plots in 
+        a GUI. Default is None
+
     filename : str
         Path and file name where to save the plot. The plot is saved only
-        if a file name is provided.
+        if a file name is provided. Default is None
     '''
 
     #######################################
@@ -437,13 +461,14 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     # calculations
     #
     
-    # jd conversion
-    jd = convert_dates(dates)
-    yr = convert_dates(dates, format='yr')
-
+    # date conversion
+    jd, j2, yr = convert_dates(dates)
+    
     # sort
     ii = np.argsort(jd)
     jd       = jd[ii]
+    j2       = j2[ii]
+    yr       = yr[ii]
     dra      = np.array(dra)[ii]
     dra_err  = np.array(dra_err)[ii]
     ddec     = np.array(ddec)[ii]
@@ -451,14 +476,17 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     
     # epochs
     nepoch = jd.size
-    delay_days = jd-jd[0]
-    
+    delay_days = j2-j2[0]
+
     # Earth motion
-    days = np.arange(jd[0]-2*delay_days.max(), jd[0]+delay_days.max()*2)
+    ext  = 2
+    days = np.concatenate((np.flip(np.arange(j2[0] - 1, j2[0] - ext*delay_days.max(), -1)),
+                           np.arange(j2[0], j2[0] + (1+ext)*delay_days.max(), 1)))
     ndays = days.size
+
     x_earth, y_earth, z_earth = earth_coord(days)
-    day_min = np.min(np.where(days >= jd[0])[0])
-    day_max = np.min(np.where(days >= jd[-1])[0])+1
+    day_min = np.min(np.where(days >= j2[0])[0])
+    day_max = np.max(np.where(days <= j2[-1])[0])
     time = np.arange(ndays)/365.25
     
     # parallactic motion constants
@@ -477,10 +505,10 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     pm_ra_err  = pm_err[0]
     pm_dec_err = pm_err[1]
     
-    dra_track = 0 + pm_ra*time + plx * ( d*x_earth - c*y_earth - d*x_earth[day_min] + c*y_earth[day_min])
+    dra_track  = 0 + pm_ra*time  + plx * ( d*x_earth  - c*y_earth  - d*x_earth[day_min]  + c*y_earth[day_min])
     ddec_track = 0 + pm_dec*time + plx * ( dp*x_earth - cp*y_earth - dp*x_earth[day_min] + cp*y_earth[day_min])
 
-    dra_track -= dra_track[day_min]
+    dra_track  -= dra_track[day_min]
     ddec_track -= ddec_track[day_min]
 
     # motion of the primary, taking into account motion of background objects
@@ -490,10 +518,10 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
         pm_bkg_ra_err  = np.sqrt(pm_ra_err**2 + pm_bkg_err[0]**2)
         pm_bkg_dec_err = np.sqrt(pm_dec_err**2 + pm_bkg_err[1]**2)
 
-        dra_bkg_track = 0 + pm_bkg_ra*time + plx * ( d*x_earth - c*y_earth - d*x_earth[day_min] + c*y_earth[day_min])
+        dra_bkg_track  = 0 + pm_bkg_ra*time  + plx * ( d*x_earth  - c*y_earth  - d*x_earth[day_min]  + c*y_earth[day_min])
         ddec_bkg_track = 0 + pm_bkg_dec*time + plx * ( dp*x_earth - cp*y_earth - dp*x_earth[day_min] + cp*y_earth[day_min])
 
-        dra_bkg_track -= dra_bkg_track[day_min]
+        dra_bkg_track  -= dra_bkg_track[day_min]
         ddec_bkg_track -= ddec_bkg_track[day_min]
     
     # error propagation
@@ -561,7 +589,8 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     zoom = 1.8
     color_nom = 'k'
     color_bkg = (0.5, 0.5, 0.5)
-    color_dat = ['black', 'red', 'teal', 'orange', 'forestgreen', 'purple', 'coral', 'navy', 'gold']
+    color_dat = ['black', 'red', 'teal', 'orange', 'forestgreen', 'purple', 'coral', 'navy', 'gold',
+                 'black', 'red', 'teal', 'orange', 'forestgreen', 'purple', 'coral', 'navy', 'gold']
     width = 2
     ms    = 8
 
@@ -570,9 +599,14 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
 
     # bigger font for this plot
     matplotlib.rcParams.update({'font.size': 17})
-    
-    plt.figure(0, figsize=(17, 8))
-    gs = gridspec.GridSpec(2, 2)
+
+    # create figure if not provided
+    if not axes:
+        fig = plt.figure(0, figsize=(17, 8))
+        fig.clf()
+        gs = gridspec.GridSpec(2, 2)
+    else:
+        ax_main, ax_sep, ax_pa = axes
     
     # RA/DEC plot
     xmin = np.min([np.min(dra[0] - dra_track[day_min:day_max]), dra.min()])
@@ -588,70 +622,71 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     dra_max  = (xmin+xmax)/2 + ext/2*zoom
     ddec_min = (ymin+ymax)/2 - ext/2*zoom
     ddec_max = (ymin+ymax)/2 + ext/2*zoom
+
+    if not axes:
+        ax_main = fig.add_subplot(gs[:, 0])
+    ax_main.clear()
     
-    ax = plt.subplot(gs[:, 0])
-    ax.clear()
-    
-    ax.plot(dra[0] - dra_track, ddec[0] - ddec_track, linestyle='dotted', color=color_nom, zorder=0)
-    ax.plot(dra[0] - dra_track[day_min:day_max], ddec[0] - ddec_track[day_min:day_max], linestyle='-', color=color_nom, zorder=0)
+    ax_main.plot(dra[0] - dra_track, ddec[0] - ddec_track, linestyle='dotted', color=color_nom, zorder=0)
+    ax_main.plot(dra[0] - dra_track[day_min:day_max], ddec[0] - ddec_track[day_min:day_max], linestyle='-', color=color_nom, zorder=0)
     
     for e in range(0, nepoch):
         col = colors.to_rgba(color_dat[e])
 
-        ax.errorbar(dra[e], ddec[e], xerr=dra_err[e], yerr=ddec_err[e], linestyle='none', marker='o',
-                    mew=width, ms=ms, mec=col, color=col, ecolor=col, elinewidth=width, capsize=0,
-                    label=dates[e])
+        ax_main.errorbar(dra[e], ddec[e], xerr=dra_err[e], yerr=ddec_err[e], linestyle='none', marker='o',
+                         mew=width, ms=ms, mec=col, color=col, ecolor=col, elinewidth=width, capsize=0,
+                         label=dates[e])
     
         if e > 0:
-            idx = delay_days.astype(int)
-            ax.errorbar(dra[0] - dra_track[day_min+idx[e]], ddec[0] - ddec_track[day_min+idx[e]],
-                        xerr=dra_err[0], yerr=ddec_err[0], linestyle='none', marker='o',
-                        mew=0, ms=ms, mec=col, color='w', ecolor=col, elinewidth=width, capsize=0, zorder=-1)
-            ax.errorbar(dra[0] - dra_track[day_min+idx[e]], ddec[0] - ddec_track[day_min+idx[e]], linestyle='none',
+            idx = delay_days.astype(int)-1
+            ax_main.errorbar(dra[0] - dra_track[day_min+idx[e]], ddec[0] - ddec_track[day_min+idx[e]],
+                             xerr=dra_err[0], yerr=ddec_err[0], linestyle='none', marker='o',
+                             mew=0, ms=ms, mec=col, color='w', ecolor=col, elinewidth=width, capsize=0, zorder=-1)
+            ax_main.errorbar(dra[0] - dra_track[day_min+idx[e]], ddec[0] - ddec_track[day_min+idx[e]], linestyle='none',
                         marker='o', mew=width, ms=ms, mec=col, color='none', ecolor=col, elinewidth=width, capsize=0,
                         zorder=+1, label=dates[e]+' (if background)')
 
             if link:
-                ax.plot((dra[e], dra[0] - dra_track[day_min+idx[e]]), (ddec[e], ddec[0] - ddec_track[day_min+idx[e]]),
-                        linestyle='-', color=col)
+                ax_main.plot((dra[e], dra[0] - dra_track[day_min+idx[e]]), (ddec[e], ddec[0] - ddec_track[day_min+idx[e]]),
+                             linestyle='-', color=col)
 
     if pm_bkg is not None:
-        ax.plot(dra[0] - dra_bkg_track, ddec[0] - ddec_bkg_track, linestyle='dotted', color=color_bkg, zorder=0)
-        ax.plot(dra[0] - dra_bkg_track[day_min:day_max], ddec[0] - ddec_bkg_track[day_min:day_max],
-                linestyle='-', color=color_bkg, zorder=0)
-                
+        ax_main.plot(dra[0] - dra_bkg_track, ddec[0] - ddec_bkg_track, linestyle='dotted', color=color_bkg, zorder=0)
+        ax_main.plot(dra[0] - dra_bkg_track[day_min:day_max], ddec[0] - ddec_bkg_track[day_min:day_max],
+                     linestyle='-', color=color_bkg, zorder=0)
+
         for e in range(1, nepoch):
             col0 = colors.to_rgba(color_dat[e])
             col1 = (col0[0], col0[1], col0[2], 0.5)
             
-            ax.errorbar(dra[0] - dra_bkg_track[day_min+idx[e]], ddec[0] - ddec_bkg_track[day_min+idx[e]],
-                        xerr=dra_err[0], yerr=ddec_err[0], linestyle='none', marker='o', alpha=0.5,
-                        mew=0, ms=ms, mec=col, color='w', ecolor=col0, elinewidth=width, capsize=0, zorder=-1)
-            ax.errorbar(dra[0] - dra_bkg_track[day_min+idx[e]], ddec[0] - ddec_bkg_track[day_min+idx[e]], linestyle='none',
-                        marker='o', mew=width, ms=ms, mec=col1, color='none',
-                        ecolor=col, elinewidth=width, capsize=0, zorder=+1)
+            ax_main.errorbar(dra[0] - dra_bkg_track[day_min+idx[e]], ddec[0] - ddec_bkg_track[day_min+idx[e]],
+                             xerr=dra_err[0], yerr=ddec_err[0], linestyle='none', marker='o', alpha=0.5,
+                             mew=0, ms=ms, mec=col, color='w', ecolor=col0, elinewidth=width, capsize=0, zorder=-1)
+            ax_main.errorbar(dra[0] - dra_bkg_track[day_min+idx[e]], ddec[0] - ddec_bkg_track[day_min+idx[e]], linestyle='none',
+                             marker='o', mew=width, ms=ms, mec=col1, color='none',
+                             ecolor=col, elinewidth=width, capsize=0, zorder=+1)
                 
     if legend_loc is not None:
-        ax.legend(loc=legend_loc)
+        ax_main.legend(loc=legend_loc)
     
     # warnings
     off = 0
     if miss_dist:
-        ax.text(dra_max-0.03*ext, ddec_max-0.05*ext, u'\u26A0 Missing distance error', fontsize=12)
+        ax_main.text(dra_max-0.03*ext, ddec_max-0.05*ext, u'\u26A0 Missing distance error', fontsize=12)
         off += 0.05
 
     if miss_pm:
-        ax.text(dra_max-0.03*ext, ddec_max-(0.05+off)*ext, u'\u26A0 Missing stellar proper motion errors', fontsize=12)
+        ax_main.text(dra_max-0.03*ext, ddec_max-(0.05+off)*ext, u'\u26A0 Missing stellar proper motion errors', fontsize=12)
             
-    ax.set_xlim(dra_max, dra_min)
-    ax.set_ylim(ddec_min, ddec_max)
+    ax_main.set_xlim(dra_max, dra_min)
+    ax_main.set_ylim(ddec_min, ddec_max)
     
-    ax.set_xlabel(r'$\Delta\alpha$ [mas]')
-    ax.set_ylabel(r'$\Delta\delta$ [mas]')
+    ax_main.set_xlabel(r'$\Delta\alpha$ [mas]')
+    ax_main.set_ylabel(r'$\Delta\delta$ [mas]')
     
-    ax.set_title(target)
+    ax_main.set_title(target)
     
-    ax.set_aspect('equal', adjustable='box')
+    ax_main.set_aspect('equal', adjustable='box')
     
     # separation plot
     zoom = 1.4
@@ -671,13 +706,21 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     ext = ymax-ymin
     sep_min = (ymin+ymax)/2 - ext/2*zoom
     sep_max = (ymin+ymax)/2 + ext/2*zoom
-    
-    ax_sep = plt.subplot(gs[0, 1:])
+
+    if not axes:
+        ax_sep = fig.add_subplot(gs[0, 1:])
+    ax_sep.clear()
     
     ax_sep.axhline(y=sep[0], linestyle='dashed', color='k')
-    
-    ax_sep.fill_between(yr[0]+time-time[day_min], sep_track-sep_track_err, sep_track+sep_track_err,
-                        linestyle='-', color='b', alpha=0.25)
+
+    # user-provided axes ==> usually for plots embeded in Qt app.
+    # In that case, fill_between() is extremely slow
+    if not axes:
+        ax_sep.fill_between(yr[0]+time-time[day_min], sep_track-sep_track_err, sep_track+sep_track_err,
+                            linestyle='-', color='b', alpha=0.25)
+    else:
+        ax_sep.fill_between(yr[0]+time-time[day_min], sep_track-sep_track_err, sep_track+sep_track_err,
+                            linestyle='-', color='none', ec='0.5')
     
     ax_sep.plot(yr[0]+time-time[day_min], sep_track, linestyle='-', color=color_nom)
 
@@ -709,13 +752,21 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     ext = ymax-ymin
     pa_min = (ymin+ymax)/2 - ext/2*zoom
     pa_max = (ymin+ymax)/2 + ext/2*zoom
-    
-    ax_pa = plt.subplot(gs[1, 1:], sharex=ax_sep)
+
+    if not axes:
+        ax_pa = fig.add_subplot(gs[1, 1:], sharex=ax_sep)
+    ax_pa.clear()
     
     ax_pa.axhline(y=pa[0], linestyle='dashed', color='k')
-    
-    ax_pa.fill_between(yr[0]+time-time[day_min], pa_track-pa_track_err, pa_track+pa_track_err,
-                       linestyle='-', color='b', alpha=0.25)
+
+    # user-provided axes ==> usually for plots embeded in Qt app.
+    # In that case, fill_between() is extremely slow
+    if not axes:
+        ax_pa.fill_between(yr[0]+time-time[day_min], pa_track-pa_track_err, pa_track+pa_track_err,
+                           linestyle='-', color='b', alpha=0.25)
+    else:
+        ax_pa.fill_between(yr[0]+time-time[day_min], pa_track-pa_track_err, pa_track+pa_track_err,
+                           linestyle='-', color='none', ec='0.5')
     
     ax_pa.plot(yr[0]+time-time[day_min], pa_track, linestyle='-', color=color_nom)
 
@@ -740,11 +791,12 @@ def plots(target, dates, dra, dra_err, ddec, ddec_err, target_info, link=False, 
     
     ax_pa.set_xlim(t_min, t_max)
     ax_pa.set_ylim(pa_min, pa_max)
-    
-    plt.subplots_adjust(left=0.08, right=0.985, bottom=0.08, top=0.95)
+
+    if not axes:
+        plt.subplots_adjust(left=0.08, right=0.985, bottom=0.08, top=0.95)
 
     # save
-    if (filename != ''):
+    if filename:
         plt.savefig(path.expanduser(filename))
 
     # restore fontsize

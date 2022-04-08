@@ -35,10 +35,10 @@ def _read_model_BHAC2015(path, fname, instrument):
     Returns
     -------
     masses : vector
-        Numpy vector with unique masses
+        Numpy vector with unique masses, in MJup
 
     ages : vector
-        Numpy vector with unique ages
+        Numpy vector with unique ages, in Myr
 
     values : array
         Array with names of parameters
@@ -117,10 +117,10 @@ def _read_model_PHOENIX_websim(path, fname, instrument):
     Returns
     -------
     masses : vector
-        Numpy vector with unique masses
+        Numpy vector with unique masses, in MJup
 
     ages : vector
-        Numpy vector with unique ages
+        Numpy vector with unique ages, in Myr
 
     values : array
         Array with names of parameters
@@ -217,10 +217,10 @@ def _read_model_sonora(path, fname, instrument):
     Returns
     -------
     masses : vector
-        Numpy vector with unique masses
+        Numpy vector with unique masses, in MJup
 
     ages : vector
-        Numpy vector with unique ages
+        Numpy vector with unique ages, in Myr
 
     values : array
         Array with names of parameters
@@ -265,10 +265,58 @@ def _read_model_bex(path, fname, instrument):
     Returns
     -------
     masses : vector
-        Numpy vector with unique masses
+        Numpy vector with unique masses, in MJup
 
     ages : vector
-        Numpy vector with unique ages
+        Numpy vector with unique ages, in Myr
+
+    values : array
+        Array with names of parameters
+
+    data : array
+        Numpy data array
+    '''
+
+    df = pd.read_csv(path / fname, index_col=(0, 1))
+
+    masses  = np.sort(np.unique(df.index.get_level_values(0)))  # MJup
+    ages    = np.sort(np.unique(df.index.get_level_values(1)))  # yr
+    values  = df.columns
+
+    data = np.zeros((len(masses), len(ages), len(values)))
+    for iv, val in enumerate(values):
+        for im, mass in enumerate(masses):
+            tmp = df.loc[(mass, slice(None)), val]
+            data[im, :, iv] = tmp
+            
+    # converts ages in Myr
+    ages = ages / 1e6
+    
+    return masses, ages, values, data
+
+    
+def _read_model_atmo(path, fname, instrument):
+    '''
+    (Private) Read the ATMO models
+
+    Parameters
+    ----------
+    path : str
+        Full path to the directory containing the model files
+
+    fname : str
+        Full model file name
+
+    instrument : str
+        Name of the instrument (or observatory) for the file
+
+    Returns
+    -------
+    masses : vector
+        Numpy vector with unique masses, in MJup
+
+    ages : vector
+        Numpy vector with unique ages, in Myr
 
     values : array
         Array with names of parameters
@@ -307,10 +355,10 @@ def _reshape_data(dataframe):
     Returns
     -------
     masses : vector
-        Numpy vector with unique masses
+        Numpy vector with unique masses, in MJup
 
     ages : vector
-        Numpy vector with unique ages
+        Numpy vector with unique ages, in Myr
 
     values : array
         Array with names of parameters
@@ -587,7 +635,17 @@ models = {
         {'instrument': 'irdis',  'name': 'bex_dusty_coldest',   'file': 'bex_ames-dusty_coldest.csv.gz',             'function': _read_model_bex},
         {'instrument': 'irdis',  'name': 'bex_dusty_warm',      'file': 'bex_ames-dusty_warm.csv.gz',                'function': _read_model_bex},
         {'instrument': 'irdis',  'name': 'bex_dusty_hot',       'file': 'bex_ames-dusty_hot.csv.gz',                 'function': _read_model_bex},
-        {'instrument': 'irdis',  'name': 'bex_dusty_hottest',   'file': 'bex_ames-dusty_hottest.csv.gz',             'function': _read_model_bex}
+        {'instrument': 'irdis',  'name': 'bex_dusty_hottest',   'file': 'bex_ames-dusty_hottest.csv.gz',             'function': _read_model_bex},
+
+        {'instrument': 'mko',    'name': 'atmo_ceq',            'file': 'ATMO_CEQ_MKO.csv.gz',                       'function': _read_model_atmo},
+        {'instrument': 'mko',    'name': 'atmo_neq_strong',     'file': 'ATMO_NEQ_strong_MKO.csv.gz',                'function': _read_model_atmo},
+        {'instrument': 'mko',    'name': 'atmo_neq_weak',       'file': 'ATMO_NEQ_weak_MKO.csv.gz',                  'function': _read_model_atmo},
+        {'instrument': 'irac',   'name': 'atmo_ceq',            'file': 'ATMO_CEQ_MKO.csv.gz',                       'function': _read_model_atmo},
+        {'instrument': 'irac',   'name': 'atmo_neq_strong',     'file': 'ATMO_NEQ_strong_MKO.csv.gz',                'function': _read_model_atmo},
+        {'instrument': 'irac',   'name': 'atmo_neq_weak',       'file': 'ATMO_NEQ_weak_MKO.csv.gz',                  'function': _read_model_atmo},
+        {'instrument': 'wise',   'name': 'atmo_ceq',            'file': 'ATMO_CEQ_MKO.csv.gz',                       'function': _read_model_atmo},
+        {'instrument': 'wise',   'name': 'atmo_neq_strong',     'file': 'ATMO_NEQ_strong_MKO.csv.gz',                'function': _read_model_atmo},
+        {'instrument': 'wise',   'name': 'atmo_neq_weak',       'file': 'ATMO_NEQ_weak_MKO.csv.gz',                  'function': _read_model_atmo},
     ],
     'data': {}
 }
