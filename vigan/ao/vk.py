@@ -880,7 +880,7 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
     
 def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azimuth,
                            spat_filter=0.7, img_wave=1.593e-6, dim_pup=240, n_screen=1, chunk_size=500, parallel=False,
-                           fit=True, servo=True, alias=True, noise=True, diff_refr=True,
+                           turb=False, fit=True, servo=True, alias=True, noise=True, diff_refr=True,
                            psd_only=False, seed=None):
     '''
     Produce residual phase screens based on the VLT/SPHERE system
@@ -935,6 +935,9 @@ def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azim
     parallel : bool
         Compute screens in parallel rather than in chunks. Default is False
     
+    turb : bool
+        Only turbulent phase. Default is False
+
     fit : bool
         Include fitting error term. Default is True
 
@@ -1082,7 +1085,6 @@ def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azim
 
     # additional fixed parameters
     full    = True
-    turb    = False
     layers  = False
         
     # compute result
