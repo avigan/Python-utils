@@ -722,7 +722,7 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
     z     = np.array(z)
     dz    = np.array(dz)
     v     = np.array(v)
-    agr_v = np.array(arg_v)
+    arg_v = np.array(arg_v)
 
     if step > (1/(2*fc)):
         raise ValueError('Warning: undersampling')
@@ -753,13 +753,13 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
         else:
             tab = np.empty((n_layers, n_screen, dim, dim))
 
-        for l in range(n_layers):
-            _log.debug(' * phase screen {}/{}'.format(l+1, n_layers))
-            local_r0      = Cn2[l]**(-3/5)*r0
-            local_L0      = L0[l]
+        for layer in range(n_layers):
+            _log.debug(' * phase screen {}/{}'.format(layer+1, n_layers))
+            local_r0      = Cn2[layer]**(-3/5)*r0
+            local_L0      = L0[layer]
             local_var_wfs = var_wfs/n_layers
 
-            idx = (np.arange(n_layers) == l)
+            idx = (np.arange(n_layers) == layer)
             ctab, cvar_ao = residual_screen(dim, L, scale, Cn2[idx], z[idx], dz[idx], v[idx], arg_v[idx],
                                             local_r0, local_L0, Td, Ti, Dtel, fc, theta, local_var_wfs,
                                             alpha, layers=False, full=full, pyr=pyr, psd_only=psd_only,
@@ -767,7 +767,7 @@ def residual_screen(dim, L, scale, Cn2, z, dz, v, arg_v, r0, L0,
                                             coeff_alias=coeff_alias, diff_refr=diff_refr, zenith=zenith,
                                             azimuth=azimuth, wfs_wave=wfs_wave, img_wave=img_wave,
                                             aniso=aniso, chrom=chrom, noise=noise, diffr=diffr)
-            tab[l] = ctab
+            tab[layer] = ctab
             var_ao.append(cvar_ao)
 
         return tab, var_ao
