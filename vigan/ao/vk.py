@@ -977,12 +977,12 @@ def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azim
 
     # telescope
     Dtel          = 8            # telescope diameter [m]
-    ri            = 0.14         # central obscuration ratio
+    # ri            = 0.14         # central obscuration ratio
     truezeropoint = 2.1e10       # [e-/m2/s]
 
     # AO user parameters
     nsspup        = 40           # linear number of sub-apertures
-    Ti            = 0.8e-3       # integration time [s]
+    Ti            = 0.725e-3     # integration time [s]
 
     # AO internal choices
     chrom       = False
@@ -994,8 +994,8 @@ def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azim
     # noise       = True
     aniso       = False
 
-    Td          = 1e-3           # detector readout + computation
-    wfs_wave    = 0.7e-6;        # WFS central wavelength [m]
+    Td          = 1.56e-3        # detector readout + computation
+    wfs_wave    = 0.7e-6         # WFS central wavelength [m]
     ron         = 0.1            # detector readout noise [e-]
     emccd       = True           # use of EMCCD
     wcog        = True           # weighted center of gravity
@@ -1025,11 +1025,11 @@ def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azim
     r01       = 0.976*0.5/seeing/4.85*(np.cos(zenith))**(3/5)
     r0        = r01*(img_wave/(0.5e-6))**(6/5)
     r0wfs     = r01*(wfs_wave/(0.5e-6))**(6/5)
-    zeropoint = truezeropoint * (np.pi*Dtel**2/4) / 2
+    # zeropoint = truezeropoint * (np.pi*Dtel**2/4) / 2
 
     pitch  =  Dtel/nsspup                 # pitch: inter-actuator distance [m]
     fc     =  1/(2*pitch)                 # pitch frequency (1/2a) [m^-1]
-    N      =  np.pi*(Dtel*fc)**2          # number of actuator
+    # N      =  np.pi*(Dtel*fc)**2          # number of actuator
 
     Nphoton =  truezeropoint*10**(-0.4*magnitude)  # [ph/s/m^2/micron]
     Nphoton =  Nphoton*pitch**2*Ti                 # [photon]
@@ -1066,7 +1066,7 @@ def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azim
         # Computation of Ns
         Ns          = 1.5 * Nt
         var_pho_wfs = np.pi**2/(2*np.log(2))*1/Nphoton*(Nt/Nd)**2
-        var_ron_wfs = p.pi**2/3*(ron/Nphoton)**2*(Ns**2/Nd)**2
+        var_ron_wfs = np.pi**2/3*(ron/Nphoton)**2*(Ns**2/Nd)**2
         gain1       = gain
 
     if emccd:
@@ -1106,12 +1106,12 @@ if __name__ == '__main__':
     #
     # atmopsheric parameters
     #
-    seeing = 0.85                 # @ 0.5 micron ["]
+    seeing = 0.85                # @ 0.5 micron ["]
     L0     = 25                  # outer scale [m]
     z      = [0, 1, 10]          # altitude [km]
     Cn2    = [20, 60, 20]        # weight [%]
-    v      = [5.0, 12.5, 30]  # wind speed [m/s]
-    arg_v  = [0, 15, 250]         # wind direction [deg]
+    v      = [5.0, 12.5, 30]     # wind speed [m/s]
+    arg_v  = [0, 15, 250]        # wind direction [deg]
 
     #
     # guide star parameters
