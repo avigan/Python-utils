@@ -977,32 +977,26 @@ def residual_screen_sphere(seeing, L0, z, Cn2, v, arg_v, magnitude, zenith, azim
 
     # telescope
     Dtel          = 8            # telescope diameter [m]
-    # ri            = 0.14         # central obscuration ratio
+    ri            = 0.14         # central obscuration ratio
     truezeropoint = 2.1e10       # [e-/m2/s]
 
     # AO user parameters
-    nsspup        = 40           # linear number of sub-apertures
-    Ti            = 0.725e-3     # integration time [s]
+    nsspup   = 40           # linear number of sub-apertures
+    Ti       = 0.725e-3     # integration time [s]
 
     # AO internal choices
-    chrom       = False
-    # diff_refr   = True
-    # fit         = True
-    # servo       = True
-    # alias       = True
-    diffr       = False
-    # noise       = True
-    aniso       = False
+    chrom    = False
+    diffr    = False
+    aniso    = False
 
-    Td          = 1.56e-3        # detector readout + computation
-    wfs_wave    = 0.7e-6         # WFS central wavelength [m]
-    ron         = 0.1            # detector readout noise [e-]
-    emccd       = True           # use of EMCCD
-    wcog        = True           # weighted center of gravity
-    # spat_filter = 0.9            # efficiency of spatial filter
-    Nd          = 2
-    f00         = 1 / (4*(Ti + 2*Td))
-    gain        = 2*(np.pi*f00*Ti)**2 / (np.sin(np.pi*f00*Ti))
+    Td       = 1.56e-3        # detector readout + computation
+    wfs_wave = 0.7e-6         # WFS central wavelength [m]
+    ron      = 0.1            # detector readout noise [e-]
+    emccd    = True           # use of EMCCD
+    wcog     = True           # weighted center of gravity
+    Nd       = 2
+    f00      = 1 / (4*(Ti + 2*Td))
+    gain     = 2*(np.pi*f00*Ti)**2 / (np.sin(np.pi*f00*Ti))
 
     #
     # simulation parameters
