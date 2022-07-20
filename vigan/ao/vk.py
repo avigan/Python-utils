@@ -1100,18 +1100,20 @@ if __name__ == '__main__':
     #
     # atmopsheric parameters
     #
-    seeing = 0.85                # @ 0.5 micron ["]
-    L0     = 25                  # outer scale [m]
-    z      = [0, 1, 10]          # altitude [km]
-    Cn2    = [20, 60, 20]        # weight [%]
-    v      = [5.0, 12.5, 30]     # wind speed [m/s]
-    arg_v  = [0, 15, 250]        # wind direction [deg]
+
+    # realistic values
+    seeing = 0.64                                      # @ 0.5 micron ["]
+    L0     = 25                                        # outer scale [m]
+    z      = [0.03, 0.09, 0.15,   5.5,  10.5,  13.5]   # altitude [km]
+    Cn2    = [  48,   24,   19,     2,     3,     4]   # weight [%]
+    v      = [ 5.5,  5.5,  5.1,  11.5,  32.0,  14.5]   # wind speed [m/s]
+    arg_v  = [69.4, 69.4, 70.1, 284.3, 276.9, 275.9]   # wind direction [deg]
 
     #
     # guide star parameters
     #
     magnitude = 4                # GS magnitude (WFS band)
-    zenith    = 20               # zenith angle
+    zenith    = 30               # zenith angle
     azimuth   = 0                # azimuth angle
 
     #
@@ -1121,41 +1123,6 @@ if __name__ == '__main__':
     dim_pup   = 240
     
     n_screen  = 5
-
-    #==================================================
-    # fined-tunned parameters for 2018-04-04T00:40:00
-    # star     = 1 Pup
-    # z        = [   0,  0.5,  1.0,  2.0,  4.0, 8.0, 16.0]
-    # Cn2      = [ 198, 10.5, 21.8, 39.8, 49.9, 7.7, 33.9]
-    # Cn2_norm = [54.8,  2.9,  6.0, 11.0, 13.8, 2.1,  9.4]
-    #==================================================
-    # seeing    = 1.0
-    # L0        = 25
-    # z         = [  0,  4, 16]
-    # Cn2       = [ 55, 35, 10]
-    # v         = [ 10, 10, 10]
-    # arg_v     = [  0, 45, 90]
-    # magnitude = 3.29
-    # zenith    = 90-74
-    # azimuth   = 71
-
-
-    # # normalize Cn2 profile
-    # z_real   = [  0,  0.5,  1.0,  2.0,  4.0, 8.0, 16.0]
-    # Cn2_real = [198, 10.5, 21.8, 39.8, 49.9, 7.7, 33.9]
-    # Cn2_real = np.array(Cn2_real)
-    # Cn2_real = Cn2_real / Cn2_real.sum()*100
-
-    # # plot
-    # plt.figure(0)
-    # plt.clf()
-    # plt.plot(Cn2_real, z_real, marker='o', color='C0')
-    # plt.plot(Cn2, z, marker='o', color='r')
-    # plt.xlabel(r'$C_{n}^{2}$ [%]')
-    # plt.ylabel('Altitude [km]')
-    # plt.tight_layout()
-    # stop
-    #==================================================
 
     # imports for example
     import vigan.optics.aperture as aperture
