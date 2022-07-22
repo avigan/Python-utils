@@ -110,13 +110,26 @@ def focal_ratio(img, threshold=0.001, wave=None, pixel=None, center=True, rebin=
     # first value of OTF below threshold
     otf_corr_1d, r = imutils.profile(otf_corr, ptype='mean', step=1, rmax=dim//2-1)
     rmax = r[otf_corr_1d >= threshold].max()
-    
+
+    # sampling
     sampling = dim/rmax
-    fratio   = None
+
+    # compute uncertainty related to image sampling
+    sampling_min = dim / (rmax + 1)
+    sampling_max = dim / (rmax - 1)
+    print(f'Sampling: {sampling:.2f} ({sampling_min:.2f}-{sampling_max:.2f})')
     
+    # focal ratio
+    fratio = None
     if wave is not None and pixel is not None:
         fratio = sampling * pixel / wave
-        
+
+        # compute uncertainty related to image sampling
+        fratio_min = sampling_min * pixel / wave
+        fratio_max = sampling_max * pixel / wave
+
+        print(f'F ratio: {fratio:.2f} ({fratio_min:.2f}-{fratio_max:.2f})')
+
     # display result
     if disp:
         otf = otf / otf.max()
@@ -134,12 +147,12 @@ def focal_ratio(img, threshold=0.001, wave=None, pixel=None, center=True, rebin=
         plt.axhline(threshold, linestyle='--', color='r', lw=1)
         plt.axvline(rmax, linestyle='--', color='r', lw=1)
 
-        plt.text(0.4, 0.95, 'sampling = {:.2f} pix / ($\lambda/D$)'.format(sampling),
+        plt.text(0.2, 0.93, 'sampling = {:.2f} pix / ($\lambda/D$)'.format(sampling),
                  transform=plt.gca().transAxes,
                  fontsize='xx-large', fontweight='bold', ha='left')
 
         if fratio is not None:
-            plt.text(0.4, 0.91, 'F ratio = {:.2f}'.format(fratio),
+            plt.text(0.2, 0.85, 'F ratio = {:.2f}'.format(fratio),
                      transform=plt.gca().transAxes,
                      fontsize='xx-large', fontweight='bold', ha='left')        
         
@@ -149,9 +162,8 @@ def focal_ratio(img, threshold=0.001, wave=None, pixel=None, center=True, rebin=
         plt.ylim(ymin, 1)
         plt.ylabel('MTF')        
         
-        plt.legend(loc='upper right')
+        plt.legend(loc='center right')
         plt.tight_layout()
                 
-        
-        
+
     return sampling, fratio
