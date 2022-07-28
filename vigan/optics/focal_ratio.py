@@ -156,24 +156,36 @@ def focal_ratio(img, xthreshold=None, ythreshold=0.001, wave=None, pixel=None, c
         plt.axhline(ythreshold, linestyle='--', color='r', lw=1)
         plt.axvline(rmax, linestyle='--', color='r', lw=1)
 
-        plt.text(0.2, 0.93, 'sampling = {:.2f} pix / ($\lambda/D$)'.format(sampling),
-                 transform=plt.gca().transAxes,
-                 fontsize='xx-large', fontweight='bold', ha='left')
+        # plt.text(0.2, 0.90, 'sampling = {:.2f} pix / ($\lambda/D$)'.format(sampling),
+        #          transform=plt.gca().transAxes,
+        #          fontsize='xx-large', fontweight='bold', ha='left')
 
-        if fratio is not None:
-            plt.text(0.2, 0.85, 'F ratio = {:.2f}'.format(fratio),
-                     transform=plt.gca().transAxes,
-                     fontsize='xx-large', fontweight='bold', ha='left')        
+        # if fratio is not None:
+        #     plt.text(0.2, 0.83, 'F ratio = {:.2f}'.format(fratio),
+        #              transform=plt.gca().transAxes,
+        #              fontsize='xx-large', fontweight='bold', ha='left')        
         
         plt.xlim(0, xthreshold)
         plt.xlabel('Cutoff pixel')
         plt.gca().xaxis.set_major_locator(ticker.MultipleLocator(5))
         plt.gca().xaxis.set_minor_locator(ticker.MultipleLocator(1))
 
+        if fratio:
+            plt.gca().spines.top.set_visible(False)
+            plt.gca().xaxis.set_ticks_position('bottom')
+
+            secax = plt.gca().secondary_xaxis('top')
+            secax.set_xlim(plt.xlim())
+            secax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+            secax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+            secax.xaxis.set_major_formatter(lambda x, pos: f'{dim / x * pixel / wave:.2f}')
+
+            secax.tick_params(axis='x', bottom=False, top=True, labelbottom=False, labeltop=True, rotation=90)
+        
         plt.ylim(ymin, 1)
         plt.ylabel('MTF')        
         
-        plt.legend(loc='center right')
+        plt.legend(loc='center left')
         plt.tight_layout()
                 
 
