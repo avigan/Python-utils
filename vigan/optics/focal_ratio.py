@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+import matplotlib.ticker as ticker
 import scipy.fftpack as fft
 
 from ..utils import imutils
@@ -106,7 +107,7 @@ def focal_ratio(img, xthreshold=None, ythreshold=0.001, wave=None, pixel=None, c
             otf_corr = otf_corr / fit[0]
     else:
         otf_corr = otf / otf.max()
-        
+
     # first value of OTF below threshold
     otf_corr_1d, r = imutils.profile(otf_corr, ptype='mean', step=1, rmax=dim//2-1)
     
@@ -142,6 +143,10 @@ def focal_ratio(img, xthreshold=None, ythreshold=0.001, wave=None, pixel=None, c
 
         # r_otf = r_otf / (dim//2 - 1) * sampling / 2
 
+        plt.figure('OTF', figsize=(8, 8))
+        plt.clf()
+        plt.imshow(otf_corr, norm=colors.LogNorm(vmin=1e-4, vmax=1))
+        
         plt.figure('F ratio estimation', figsize=(12, 9))
         plt.clf()
         
@@ -162,6 +167,8 @@ def focal_ratio(img, xthreshold=None, ythreshold=0.001, wave=None, pixel=None, c
         
         plt.xlim(0, xthreshold)
         plt.xlabel('Cutoff pixel')
+        plt.gca().xaxis.set_major_locator(ticker.MultipleLocator(5))
+        plt.gca().xaxis.set_minor_locator(ticker.MultipleLocator(1))
 
         plt.ylim(ymin, 1)
         plt.ylabel('MTF')        
