@@ -180,7 +180,7 @@ def focal_ratio(img, xthreshold=None, ythreshold=0.001, wave=None, pixel=None, c
             secax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
             secax.xaxis.set_major_formatter(lambda x, pos: f'{dim / x * pixel / wave:.2f}')
 
-            secax.tick_params(axis='x', bottom=False, top=True, labelbottom=False, labeltop=True, rotation=90)
+            secax.tick_params(axis='x', bottom=False, top=True, labelbottom=False, labeltop=True, rotation=75)
         
         plt.ylim(ymin, 1)
         plt.ylabel('MTF')        
