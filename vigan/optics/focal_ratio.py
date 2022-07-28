@@ -6,7 +6,7 @@ import scipy.fftpack as fft
 from ..utils import imutils
 
 
-def focal_ratio(img, threshold=0.001, wave=None, pixel=None, center=True, rebin=2,
+def focal_ratio(img, xthreshold=None, ythreshold=0.001, wave=None, pixel=None, center=True, rebin=2,
                 background_fit=True, background_fit_order=2, disp=False, ymin=1e-4):
     '''
     Compute the focal ratio from a PSF image using MTF = |OTF|
@@ -106,10 +106,14 @@ def focal_ratio(img, threshold=0.001, wave=None, pixel=None, center=True, rebin=
             otf_corr = otf_corr / fit[0]
     else:
         otf_corr = otf / otf.max()
-    
+        
     # first value of OTF below threshold
     otf_corr_1d, r = imutils.profile(otf_corr, ptype='mean', step=1, rmax=dim//2-1)
-    rmax = r[otf_corr_1d >= threshold].max()
+    
+    if not xthreshold:
+        xthreshold = r.max()
+    
+    rmax = r[(r <= xthreshold) & (otf_corr_1d >= ythreshold)].max()
 
     # sampling
     sampling = dim/rmax
@@ -144,7 +148,7 @@ def focal_ratio(img, threshold=0.001, wave=None, pixel=None, center=True, rebin=
         plt.semilogy(r_otf, otf_1d, lw=2, label='MTF')
         plt.semilogy(r_otf, otf_corr_1d, lw=2, linestyle='--', label='MTF (corrected)')
 
-        plt.axhline(threshold, linestyle='--', color='r', lw=1)
+        plt.axhline(ythreshold, linestyle='--', color='r', lw=1)
         plt.axvline(rmax, linestyle='--', color='r', lw=1)
 
         plt.text(0.2, 0.93, 'sampling = {:.2f} pix / ($\lambda/D$)'.format(sampling),
