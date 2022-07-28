@@ -160,7 +160,7 @@ def focal_ratio(img, xthreshold=None, ythreshold=0.001, wave=None, pixel=None, c
                      transform=plt.gca().transAxes,
                      fontsize='xx-large', fontweight='bold', ha='left')        
         
-        plt.xlim(0, dim//2)
+        plt.xlim(0, xthreshold)
         plt.xlabel('Cutoff pixel')
 
         plt.ylim(ymin, 1)
