@@ -5,6 +5,8 @@ import matplotlib.ticker as ticker
 import scipy.fftpack as fft
 
 from ..utils import imutils
+from . import aperture
+from . import mft
 
 
 def focal_ratio(img, xthreshold=None, ythreshold=0.001, wave=None, pixel=None, center=True, rebin=2,
@@ -119,6 +121,14 @@ def focal_ratio(img, xthreshold=None, ythreshold=0.001, wave=None, pixel=None, c
     # sampling
     sampling = dim/rmax
 
+    # theoretical OTF
+    # pupil  = aperture.disc(512, 512, diameter=True, strict=True, cpix=True)
+    # psf_th = np.abs(mft.mft(pupil, 512, dim, dim/sampling))**2
+    # otf_th = fft.fftshift(np.abs(fft.ifft2(fft.fftshift(psf_th)))).real
+    # otf_th = otf_th / otf_th.max()
+    # otf_th_1d = otf_th[dim//2, dim//2:]
+    # otf_th_r  = np.arange(dim//2)
+    
     # compute uncertainty related to image sampling
     sampling_min = dim / (rmax + 1)
     sampling_max = dim / (rmax - 1)
@@ -141,8 +151,6 @@ def focal_ratio(img, xthreshold=None, ythreshold=0.001, wave=None, pixel=None, c
         otf_1d, r_otf = imutils.profile(otf, ptype='mean', step=1, rmax=dim//2-1)
         otf_corr_1d, r = imutils.profile(otf_corr, ptype='mean', step=1, rmax=dim//2-1)
 
-        # r_otf = r_otf / (dim//2 - 1) * sampling / 2
-
         plt.figure('OTF', figsize=(8, 8))
         plt.clf()
         plt.imshow(otf_corr, norm=colors.LogNorm(vmin=1e-4, vmax=1))
@@ -154,6 +162,7 @@ def focal_ratio(img, xthreshold=None, ythreshold=0.001, wave=None, pixel=None, c
         
         plt.semilogy(r_otf, otf_1d, lw=2, marker='+', label='MTF')
         plt.semilogy(r_otf, otf_corr_1d, lw=2, linestyle='--', marker='+', label='MTF (corrected)')
+        # plt.semilogy(otf_th_r, otf_th_1d, lw=2, linestyle='-', color='k', label='MTF (theoretical)')
 
         plt.axhline(ythreshold, linestyle='--', color='r', lw=1)
         plt.axvline(rmax, linestyle='--', color='r', lw=1)
