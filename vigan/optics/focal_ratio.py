@@ -146,25 +146,23 @@ def focal_ratio(img, xthreshold=None, ythreshold=0.001, wave=None, pixel=None, c
         plt.figure('OTF', figsize=(8, 8))
         plt.clf()
         plt.imshow(otf_corr, norm=colors.LogNorm(vmin=1e-4, vmax=1))
+        plt.title('OTF')
+        plt.tight_layout()
         
         plt.figure('F ratio estimation', figsize=(12, 9))
         plt.clf()
         
-        plt.semilogy(r_otf, otf_1d, lw=2, label='MTF')
-        plt.semilogy(r_otf, otf_corr_1d, lw=2, linestyle='--', label='MTF (corrected)')
+        plt.semilogy(r_otf, otf_1d, lw=2, marker='+', label='MTF')
+        plt.semilogy(r_otf, otf_corr_1d, lw=2, linestyle='--', marker='+', label='MTF (corrected)')
 
         plt.axhline(ythreshold, linestyle='--', color='r', lw=1)
         plt.axvline(rmax, linestyle='--', color='r', lw=1)
 
-        # plt.text(0.2, 0.90, 'sampling = {:.2f} pix / ($\lambda/D$)'.format(sampling),
-        #          transform=plt.gca().transAxes,
-        #          fontsize='xx-large', fontweight='bold', ha='left')
+        if fratio:
+            plt.title(f'Sampling = {sampling:.2f} pix / ($\lambda/D$) - F ratio = {fratio:.2f}')
+        else:
+            plt.title(f'Sampling = {sampling:.2f} pix / ($\lambda/D$)')
 
-        # if fratio is not None:
-        #     plt.text(0.2, 0.83, 'F ratio = {:.2f}'.format(fratio),
-        #              transform=plt.gca().transAxes,
-        #              fontsize='xx-large', fontweight='bold', ha='left')        
-        
         plt.xlim(0, xthreshold)
         plt.xlabel('Cutoff pixel')
         plt.gca().xaxis.set_major_locator(ticker.MultipleLocator(5))
