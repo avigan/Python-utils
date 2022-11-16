@@ -273,7 +273,7 @@ def fast_accurate(wave, flux, epsilon, vsini, nslice=5):
             imax = istart+(s+1)*slice_len
             imax = imax if imax < nwave else nwave
             
-            results[ss, imin:imax] = fast_rot_broad(wave[imin:imax], flux[imin:imax], vsini, epsilon)
+            results[ss, imin:imax] = fast(wave[imin:imax], flux[imin:imax], vsini, epsilon)
 
     flux_broad = np.median(results, axis=0)
             
