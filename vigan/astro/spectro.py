@@ -66,7 +66,7 @@ def wavelength_grid(wave_min, wave_max, wave_step=None, resolution=None):
 
 def downgrade_resolution(wave, flux, wave_step=None, resolution=None, reinterpolate=False):
     '''
-    Downgrades the spectral resolution of a spectrum
+    Downgrade the spectral resolution of a spectrum
 
     Parameters
     ----------
