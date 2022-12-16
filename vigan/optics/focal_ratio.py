@@ -59,8 +59,8 @@ def otf_optim(rmax, pupil, dim, otf_1d_r, otf_1d, fact=4):
     return np.sum(weights * np.abs(otf_1d - otf_th_1d_n))
 
 
-def focal_ratio_fit(img, wave=None, pixel=None, xthreshold=None, ythreshold=0.001, center=True, rebin=2,
-                    background_fit=True, background_fit_order=2, otf_fit=False, disp=False, ymin=1e-4):
+def focal_ratio(img, wave=None, pixel=None, xthreshold=None, ythreshold=0.001, center=True, rebin=2,
+                background_fit=True, background_fit_order=2, otf_fit=False, disp=False, ymin=1e-4):
     '''
     Compute the focal ratio from a PSF image using MTF = |OTF|
 
