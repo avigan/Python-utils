@@ -87,10 +87,10 @@ def peak_center(img, window=0, edges=0, mask=None):
     
     # hide edges
     if edges > 0:
-        img[:edges, :] = 0
-        img[:, :edges] = 0
-        img[edges:, :] = 0
-        img[:, edges:] = 0
+        img[0:edges, :] = 0
+        img[-edges:, :] = 0
+        img[:, 0:edges] = 0
+        img[:, -edges:] = 0
 
     # apply mask
     if mask is not None:
@@ -100,7 +100,7 @@ def peak_center(img, window=0, edges=0, mask=None):
     imax = np.unravel_index(np.argmax(img), img.shape)
     cx_int = imax[1]
     cy_int = imax[0]
-    
+
     # sub-window
     win = window // 2
     if window > 0:        
@@ -116,7 +116,7 @@ def peak_center(img, window=0, edges=0, mask=None):
  
         cx_init = cx_int
         cy_init = cy_int
-        
+
     # fit
     x, y = np.meshgrid(np.arange(sub.shape[1]), np.arange(sub.shape[0]))
     g_init = models.Gaussian2D(amplitude=sub.max(), x_mean=cx_init, y_mean=cy_init) + \
