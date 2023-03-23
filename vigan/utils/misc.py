@@ -102,3 +102,47 @@ def confidence_interval_statistics(data, CI=[0.99, 0.95, 0.68]):
             data_lim[c, 1, y] = cmax
 
     return data_med, data_lim
+
+def lines_intersect(a1, a2, b1, b2):
+    '''
+    Determines the intersection point of two lines passing by points
+    (a1,a2) and (b1,b2).
+
+    See https://stackoverflow.com/questions/3252194/numpy-and-line-intersections
+
+    Parameters
+    ----------
+
+    a, b : 2D tuples
+        Coordinates of points on line 1
+
+    c, d : 2D tuples
+        Coordinates of points on line 2
+
+    Returns
+    -------
+    val
+        Returns None is lines are parallel, (cx,cy) otherwise.
+    '''
+
+    # make sure we have arrays
+    a1 = np.array(a1)
+    a2 = np.array(a2)
+    b1 = np.array(b1)
+    b2 = np.array(b2)
+
+    # test lines
+    da = a2 - a1                # vector from A1 to A2
+    db = b2 - b1                # vector from B1 to B2
+    dp = a1 - b1
+    pda = [-da[1], da[0]]       # perpendicular to A1-A2 vector
+
+    # parallel lines
+    if (pda*db).sum() == 0:
+        return None
+
+    # find intersection
+    denom = pda @ db
+    num   = pda @ dp
+
+    return (num / denom)*db + b1
