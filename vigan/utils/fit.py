@@ -57,7 +57,7 @@ def circle(x, y):
     
     return cx, cy, radius
 
-def gaussian(img, window=0, edges=0, mask=None)
+def gaussian(img, window=0, edges=0, mask=None):
     '''Gaussian fit
     
     Parameters
