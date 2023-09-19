@@ -11,7 +11,7 @@ from . import aperture
 from . import mft
 
 # adjust theoretical OTF
-def otf_optim(rmax, pupil, dim, otf_1d_r, otf_1d, fact=4):
+def otf_optim(rmax, pupil, dim, otf_1d_r, otf_1d, fact=1):
     '''
     Otical transfer function optimization function
 
@@ -57,6 +57,50 @@ def otf_optim(rmax, pupil, dim, otf_1d_r, otf_1d, fact=4):
     # plt.pause(0.001)
 
     return np.sum(weights * np.abs(otf_1d - otf_th_1d_n))
+
+
+def otf_optim_2d(rmax, pupil, dim, otf, fact=1):
+    '''
+    Otical transfer function optimization function
+
+    rmax : float
+        Cutoff in pixels (variable being optimized)
+
+    pupil : 2d array
+        Pre-generated pupil image
+
+    dim : int
+        Dimension of the OTF
+
+    otf_1d_r : array
+        OTF radius of the data
+
+    otf_1d : array
+        OTF of the data
+
+    fact : int
+        Oversampling factor. Default is 4
+    '''
+    sampling = dim / rmax[0]
+    psf_th = np.abs(mft.mft(pupil, 1024, fact*dim, fact*dim/sampling))**2
+    otf_th = fft.fftshift(np.abs(fft.ifft2(fft.fftshift(psf_th)))).real
+    otf_th = otf_th / otf_th.max()
+
+    # weights = np.ones(otf.shape)
+    # weights[otf < 1e-3] = 0
+
+    ret = np.abs(1 - otf / otf_th)
+    ret[otf < 1e-4] = 0
+
+    plt.figure(0)
+    plt.clf()
+    plt.imshow(ret)
+    plt.xlim(dim//2-30, dim//2+30)
+    plt.ylim(dim//2-30, dim//2+30)
+    plt.pause(0.001)
+    
+    return np.sum(ret)
+
 
 
 def focal_ratio(img, wave=None, pixel=None, xthreshold=None, ythreshold=0.001, center=True, rebin=2,
@@ -180,7 +224,13 @@ def focal_ratio(img, wave=None, pixel=None, xthreshold=None, ythreshold=0.001, c
         p = optimize.minimize(otf_optim, [rmax], args=(pupil, dim, otf_corr_1d_r, otf_corr_1d),
                               method='Nelder-Mead', options={'maxfev': 50})
         rmax = p['x'][0]
-    
+
+    # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')    
+    # fratio = 415
+    # sampling = fratio * wave / pixel
+    # rmax = dim / sampling
+    # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')    
+
     # sampling
     sampling = dim / rmax
     
@@ -232,12 +282,12 @@ def focal_ratio(img, wave=None, pixel=None, xthreshold=None, ythreshold=0.001, c
         plt.figure('F ratio estimation', figsize=(12, 9))
         plt.clf()
         
-        plt.semilogy(r_otf, otf_1d, lw=2, marker='+', label='MTF')
-        plt.semilogy(otf_th_lr_r, otf_th_lr_1d, lw=2, linestyle='--', color='k', label='MTF (theoretical)')
-        plt.semilogy(otf_th_hr_r, otf_th_hr_1d, lw=2, linestyle='-', color='k', label='MTF (theoretical, high-res)')
+        plt.semilogy(r_otf, otf_1d, lw=2, marker='+', label='OTF')
+        plt.semilogy(otf_th_lr_r, otf_th_lr_1d, lw=2, linestyle='--', color='k', label='OTF (theoretical)')
+        plt.semilogy(otf_th_hr_r, otf_th_hr_1d, lw=2, linestyle='-', color='k', label='OTF (theoretical, high-res)')
 
-        plt.axhline(ythreshold, linestyle='--', color='r', lw=1)
-        plt.axvline(rmax, linestyle='--', color='r', lw=1)
+        # plt.axhline(ythreshold, linestyle='--', color='r', lw=1)
+        # plt.axvline(rmax, linestyle='--', color='r', lw=1)
 
         if fratio:
             plt.title(f'Sampling = {sampling:.2f} pix / ($\lambda/D$) - F ratio = {fratio:.2f}')
@@ -264,7 +314,7 @@ def focal_ratio(img, wave=None, pixel=None, xthreshold=None, ythreshold=0.001, c
         plt.ylim(ymin, 1)
         plt.ylabel('MTF')        
         
-        plt.legend(loc='center left')
+        plt.legend()
         plt.tight_layout()
                 
 
