@@ -299,5 +299,5 @@ def magnitude(mag=None, absmag=None, distance=None, parallax=None):
     print('distance = {:.2f} pc'.format(d))
     print('parallax = {:.2f} mas'.format(d))
     print('mag      = {:.2f}'.format(m))
-    print('abs_mag  = {:.2f}'.format(m))
+    print('abs_mag  = {:.2f}'.format(M))
 
