@@ -221,22 +221,22 @@ def polywarp(xi, yi, xo, yo, degree=1):
 
     # set up some useful variables
     degree2 = (degree+1)**2
-    x = np.array([xi,yi])
-    u = np.array([xo,yo])
+    x = np.array([xi, yi])
+    u = np.array([xo, yo])
     ut = np.zeros([degree2,len(xo)])
     u2i = np.zeros(degree+1)
     for i in range(len(xo)):
         u2i[0] = 1.
         zz = u[1,i]
         for j in range(1,degree+1):
-            u2i[j]=u2i[j-1]*zz
-        ut[0:degree+1,i] = u2i
+            u2i[j] = u2i[j-1]*zz
+        ut[0:degree+1, i] = u2i
         for j in range(1,degree+1):
             ut[j*(degree+1):j*(degree+1)+degree+1,i] = u2i*u[0,i]**j
 
     uu = ut.T
     kk = np.dot(np.linalg.inv(np.dot(ut,uu).T).T, ut)
-    kx = np.dot(kk,x[0,:].T).reshape(degree+1, degree+1)
-    ky = np.dot(kk,x[1,:].T).reshape(degree+1, degree+1)
+    kx = np.dot(kk, x[0,:].T).reshape(degree+1, degree+1)
+    ky = np.dot(kk, x[1,:].T).reshape(degree+1, degree+1)
 
     return kx, ky
