@@ -57,8 +57,76 @@ def circle(x, y):
     
     return cx, cy, radius
 
-def gaussian(img, window=0, edges=0, mask=None):
-    '''Gaussian fit
+def gaussian1d(x, y, window=0, edges=0, mask=None):
+    '''Gaussian 1d fit
+    
+    Parameters
+    ----------
+    x : array
+        Vector of x value
+
+    y : array
+        Vector of y value
+     
+    window : int
+        Half-size of sub-window in which to do the fit. If 0, then the fit
+        is performed over the full vector. Default is 0
+
+    edges : int
+        Number of pixels to hide on the edges. Default is 0
+
+    mask : array
+        Mask to apply to the data. Default is None
+
+    Returns
+    -------
+    params : ?
+        Gaussian fit parameters
+    '''
+
+    x = x.copy()
+    y = y.copy()
+    if mask is not None:
+        mask = mask.copy()
+    
+    # hide edges
+    if edges > 0:
+        x = x[edges:-edges]
+        y = y[edges:-edges]
+        mask = mask[edges:-edges]
+
+    # apply mask
+    if mask is not None:
+        x = x[mask]
+        y = y[mask]
+
+    # estimate peak position    
+    c_int = np.argmax(y)
+
+    # sub-window
+    win = window // 2
+    if window > 0:        
+        if (window % 2):
+            raise ValueError('window parameter must be even')
+        
+        x_sub = x[c_int-win:c_int+win]
+        y_sub = y[c_int-win:c_int+win]
+        c_init = win
+    else:
+        x_sub = x
+        y_sub = y
+        c_init = c_int
+
+    # fit
+    g_init = models.Gaussian1D(amplitude=y_sub.max(), mean=x[c_init]) + models.Const1D(amplitude=0)
+    
+    fit_g = fitting.LevMarLSQFitter()
+    g = fit_g(g_init, x_sub, y_sub)
+
+    return g
+
+def gaussian2d(img, window=0, edges=0, mask=None):
+    '''Gaussian 2d fit
     
     Parameters
     ----------
