@@ -105,7 +105,7 @@ def gaussian1d(x, y, window=0, edges=0, mask=None):
 
     # sub-window
     win = window // 2
-    if window > 0:        
+    if window > 0: 
         if (window % 2):
             raise ValueError('window parameter must be even')
         
@@ -118,7 +118,7 @@ def gaussian1d(x, y, window=0, edges=0, mask=None):
         c_init = c_int
 
     # fit
-    g_init = models.Gaussian1D(amplitude=y_sub.max(), mean=x[c_init]) + models.Const1D(amplitude=0)
+    g_init = models.Gaussian1D(amplitude=y_sub.max(), mean=x_sub[c_init]) + models.Const1D(amplitude=y_sub.min())
     
     fit_g = fitting.LevMarLSQFitter()
     g = fit_g(g_init, x_sub, y_sub)
