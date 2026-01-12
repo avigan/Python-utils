@@ -12,7 +12,7 @@ def prof(img, ptype=1, step=1, mask=None, center=None, rmax=0, clip=True, exact=
     ----------
     img : array
         Image on which the profiles
-        
+
     ptype : int, optional
         Type of profiles
             1: mean (default)
@@ -20,44 +20,44 @@ def prof(img, ptype=1, step=1, mask=None, center=None, rmax=0, clip=True, exact=
             3: variance
             4: median
             5: max
-            
+
     mask : array, optional
         Mask for invalid values (must have the same size as image)
-        
+
     center : {array,tupple,list}, optional
         Center of the image
 
     rmax : float
         Maximum radius for calculating the profile, in pixel. Default is 0 (no limit)
-    
+
     clip : bool, optional
         Clip profile to area of image where there is a full set of data
-        
+
     exact : bool, optional
-        Performs an exact estimation of the profile. This can be very long for 
-        large arrays. Default is False, which rounds the radial distance to the 
+        Performs an exact estimation of the profile. This can be very long for
+        large arrays. Default is False, which rounds the radial distance to the
         closest 1 pixel.
-    
+
     Returns
     -------
     prof : array
         1D profile vector
-        
+
     rad : array
         Separation vector, in pixel
 
     History
     -------
     2016-07-08 - Arthur Vigan
-        Improved algorithm    
-    
+        Improved algorithm
+
     2015-10-05 - Arthur Vigan
         First version based on IDL equivalent
     '''
-    
+
     # make sure we work on a copy
     img = img.copy()
-    
+
     # array dimensions
     dimx = img.shape[1]
     dimy = img.shape[0]
@@ -73,19 +73,19 @@ def prof(img, ptype=1, step=1, mask=None, center=None, rmax=0, clip=True, exact=
             raise ValueError('Image and mask don''t have the same size. Returning.')
 
         img[mask == 0] = np.nan
-        
+
     # intermediate cartesian arrays
     x = np.arange(dimx, dtype=np.int64) - center[0]
     y = np.arange(dimy, dtype=np.int64) - center[1]
     xx, yy = np.meshgrid(x, y)
     rr = np.sqrt(xx**2 + yy**2)
-    
+
     # rounds for faster calculation
     if exact is not True:
         rr = np.round(rr, decimals=0)
-    
+
     # find unique radial values
-    uniq = np.unique(rr, return_inverse=True, return_counts=True)
+    uniq = np.unique(rr.flatten(), return_inverse=True, return_counts=True)
     r_uniq_val = uniq[0]
     r_uniq_inv = uniq[1]
     r_uniq_cnt = uniq[2]
@@ -103,22 +103,22 @@ def prof(img, ptype=1, step=1, mask=None, center=None, rmax=0, clip=True, exact=
     if (rmax > 0):
         r_max = rmax
         i_max = int(r_uniq_val[r_uniq_val <= r_max].size)
-        
+
     t_max = r_uniq_cnt[0:i_max].max()
 
     # intermediate polar array
     polar = np.empty((i_max, t_max), dtype=img.dtype)
     polar.fill(np.nan)
-    
+
     img_flat = img.ravel()
     for r in range(i_max):
         cnt = r_uniq_cnt[r]
         val = img_flat[r_uniq_inv == r]
         polar[r, 0:cnt] = val
-            
+
     # calculate profile
     rad  = r_uniq_val[0:i_max]
-    
+
     if step == 1:
         # fast statistics if step=1
         if ptype == 1:
@@ -139,7 +139,7 @@ def prof(img, ptype=1, step=1, mask=None, center=None, rmax=0, clip=True, exact=
         for r in range(i_max):
             idx = ((rad[r]-step/2) <= rad) & (rad <= (rad[r]+step/2))
             val = polar[idx, :]
-            
+
             if ptype == 1:
                 prof[r] = np.nanmean(val)
             elif ptype == 2:
@@ -159,7 +159,7 @@ def prof(img, ptype=1, step=1, mask=None, center=None, rmax=0, clip=True, exact=
 def mean(img, **kwargs):
     '''
     Calculate the azimuthal mean of an image
-    
+
     Parameters
     ----------
     See documentation for profile()
@@ -171,7 +171,7 @@ def mean(img, **kwargs):
 def std(img, **kwargs):
     '''
     Calculate the azimuthal standard deviation of an image
-    
+
     Parameters
     ----------
     See documentation for profile()
@@ -183,7 +183,7 @@ def std(img, **kwargs):
 def var(img, **kwargs):
     '''
     Calculate the azimuthal variance of an image
-    
+
     Parameters
     ----------
     See documentation for profile()
@@ -195,7 +195,7 @@ def var(img, **kwargs):
 def median(img, **kwargs):
     '''
     Calculate the azimuthal median of an image
-    
+
     Parameters
     ----------
     See documentation for profile()
@@ -207,7 +207,7 @@ def median(img, **kwargs):
 def max(img, **kwargs):
     '''
     Calculate the azimuthal maximum of an image
-    
+
     Parameters
     ----------
     See documentation for profile()
@@ -218,23 +218,23 @@ def max(img, **kwargs):
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    
+
     dimx = 512
     dimy = 512
     center = (dimx//2, dimy//2)
-    
+
     x = np.arange(dimx, dtype=np.float64) - center[0]
     y = np.arange(dimy, dtype=np.float64) - center[1]
     xx, yy = np.meshgrid(x, y)
     rr = np.sqrt(xx**2 + yy**2)
-    
+
     p, r = mean(rr, clip=True, center=(120, 200))
 
     plt.figure()
     plt.plot(r, p)
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
